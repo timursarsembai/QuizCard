@@ -173,5 +173,84 @@ class User {
             throw $e;
         }
     }
+    
+    public function getTeacherInfo($teacher_id) {
+        $query = "SELECT id, username, first_name, last_name, email, created_at 
+                  FROM users 
+                  WHERE id = :teacher_id AND role = 'teacher'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':teacher_id', $teacher_id);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function updateTeacher($teacher_id, $username = null, $password = null, $first_name = null, $last_name = null) {
+        // Проверяем, что пользователь существует и является преподавателем
+        $check_query = "SELECT id FROM users WHERE id = :teacher_id AND role = 'teacher'";
+        $check_stmt = $this->conn->prepare($check_query);
+        $check_stmt->bindParam(':teacher_id', $teacher_id);
+        $check_stmt->execute();
+        
+        if ($check_stmt->rowCount() == 0) {
+            return false; // Преподаватель не найден
+        }
+        
+        // Формируем динамический запрос обновления
+        $updates = [];
+        $params = [':teacher_id' => $teacher_id];
+        
+        if ($username !== null) {
+            $updates[] = "username = :username";
+            $params[':username'] = $username;
+        }
+        
+        if ($password !== null) {
+            $updates[] = "password = :password";
+            $params[':password'] = password_hash($password, PASSWORD_DEFAULT);
+        }
+        
+        if ($first_name !== null) {
+            $updates[] = "first_name = :first_name";
+            $params[':first_name'] = $first_name;
+        }
+        
+        if ($last_name !== null) {
+            $updates[] = "last_name = :last_name";
+            $params[':last_name'] = $last_name;
+        }
+        
+        if (empty($updates)) {
+            return true; // Нечего обновлять
+        }
+        
+        $query = "UPDATE users SET " . implode(', ', $updates) . " WHERE id = :teacher_id";
+        $stmt = $this->conn->prepare($query);
+        
+        try {
+            $result = $stmt->execute($params);
+            
+            // Обновляем сессию, если данные изменились
+            if ($result) {
+                if ($username !== null) {
+                    $_SESSION['username'] = $username;
+                }
+                if ($first_name !== null) {
+                    $_SESSION['first_name'] = $first_name;
+                }
+                if ($last_name !== null) {
+                    $_SESSION['last_name'] = $last_name;
+                }
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            // Обрабатываем ошибку дублирования имени пользователя
+            if ($e->getCode() == 23000) {
+                return false;
+            }
+            throw $e;
+        }
+    }
 }
 ?>

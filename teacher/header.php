@@ -138,6 +138,7 @@
                 <a href="decks.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'decks.php' ? 'active' : ''; ?>">Колоды</a>
                 <a href="tests.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'tests.php' ? 'active' : ''; ?>">Тесты</a>
                 <a href="students.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'students.php' ? 'active' : ''; ?>">Ученики</a>
+                <a href="account.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'account.php' ? 'active' : ''; ?>">Аккаунт</a>
                 <a href="../logout.php" class="btn">Выйти</a>
             </div>
         </div>
