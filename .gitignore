@@ -1,0 +1,11 @@
+# Local database configuration
+config/database_local.php
+
+# Log files
+logs/
+
+# User uploads
+uploads/
+
+# Vendor directory for dependencies
+vendor/
