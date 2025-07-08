@@ -9,3 +9,6 @@ uploads/
 
 # Vendor directory for dependencies
 vendor/
+
+# macOS system files
+.DS_Store
