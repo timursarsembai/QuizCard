@@ -5,6 +5,7 @@ require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Test.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -82,116 +83,17 @@ foreach ($student_decks as $deck_item) {
 
 // Получаем последние попытки
 $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
+
+// Переменные для header.php
+$page_title = "Управление прогрессом - " . htmlspecialchars($student_info['first_name'] . ' ' . $student_info['last_name']);
+$page_icon = "fas fa-chart-line";
 ?>
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Управление прогрессом</title>
+<?php require_once 'header.php'; ?>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            line-height: 1.6;
-        }
-
-        .header {
-            background: #667eea;
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo h1 {
-            font-size: 1.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd8;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-
-        .card h2 {
-            color: #333;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 0.5rem;
-        }
-
+        /* Дополнительные стили для страницы управления прогрессом */
+        
         .student-info {
             background: #f8f9fa;
             padding: 1.5rem;
@@ -268,22 +170,31 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
             align-items: center;
         }
 
-        .alert {
-            padding: 1rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
+        .btn-primary {
+            background: #667eea;
+            color: white;
         }
 
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
+        .btn-primary:hover {
+            background: #5a6fd8;
         }
 
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
         }
 
         /* Стили для раздела тестов */
@@ -431,31 +342,7 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
             margin-bottom: 1rem;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: #666;
-        }
-
-        .empty-state h3 {
-            color: #667eea;
-            margin-bottom: 1rem;
-        }
-
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .nav-links {
-                flex-wrap: wrap;
-            }
-
-            .container {
-                padding: 0 1rem;
-            }
-
             .deck-item {
                 flex-direction: column;
                 gap: 1rem;
@@ -489,43 +376,32 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <h1>🔄 Управление прогрессом</h1>
-            </div>
-            <div class="nav-links">
-                <a href="dashboard.php" class="btn">👥 Ученики</a>
-                <a href="decks.php" class="btn">📚 Колоды</a>
-                <a href="tests.php" class="btn">🎯 Тесты</a>
-                <a href="../logout.php" class="btn">Выйти</a>
-            </div>
-        </div>
-    </header>
 
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <?php if (isset($success)): ?>
             <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
 
         <?php if (isset($error)): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
 
         <div class="card">
-            <h2>Информация об ученике</h2>
+            <h2 data-translate-key="student_info_title">Информация об ученике</h2>
             <div class="student-info">
                 <div class="student-avatar">👨‍🎓</div>
                 <div class="student-details">
                     <h3><?php echo htmlspecialchars($student_info['first_name'] . ' ' . $student_info['last_name']); ?></h3>
-                    <p>Имя пользователя: @<?php echo htmlspecialchars($student_info['username']); ?></p>
-                    <p>Дата регистрации: <?php echo date('d.m.Y', strtotime($student_info['created_at'])); ?></p>
+                    <p><span data-translate-key="username_label">Имя пользователя:</span> @<?php echo htmlspecialchars($student_info['username']); ?></p>
+                    <p><span data-translate-key="registration_date_label">Дата регистрации:</span> <?php echo date('d.m.Y', strtotime($student_info['created_at'])); ?></p>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h2>Прогресс по колодам</h2>
+            <h2 data-translate-key="deck_progress_title">Прогресс по колодам</h2>
             <?php if (!empty($student_decks)): ?>
                 <div class="deck-list">
                     <?php foreach ($student_decks as $deck_item): 
@@ -536,9 +412,9 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                             <div class="deck-info">
                                 <div class="deck-name"><?php echo htmlspecialchars($deck_item['name']); ?></div>
                                 <div class="deck-stats">
-                                    Всего слов: <?php echo $deck_item['total_words']; ?> | 
-                                    К изучению: <?php echo $deck_item['words_to_review']; ?> | 
-                                    Изучено: <?php echo $deck_item['learned_words']; ?>
+                                    <span data-translate-key="total_words_label">Всего слов:</span> <?php echo $deck_item['total_words']; ?> | 
+                                    <span data-translate-key="to_review_label">К изучению:</span> <?php echo $deck_item['words_to_review']; ?> | 
+                                    <span data-translate-key="learned_words_label">Изучено:</span> <?php echo $deck_item['learned_words']; ?>
                                 </div>
                                 <div class="deck-progress">
                                     <div class="deck-progress-fill" style="width: <?php echo $progress; ?>%"></div>
@@ -546,9 +422,11 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                             </div>
                             <div class="deck-actions">
                                 <form method="POST" action="" style="display: inline;" 
-                                      onsubmit="return confirm('Вы уверены, что хотите сбросить прогресс по этой колоде?')">
+                                      onsubmit="return confirm('Вы уверены, что хотите сбросить прогресс по этой колоде?')"
+                                      data-confirm-key="reset_deck_progress_confirm">
                                     <input type="hidden" name="deck_id" value="<?php echo $deck_item['id']; ?>">
-                                    <button type="submit" name="reset_deck_progress" class="btn btn-warning" title="Сбросить прогресс по колоде">
+                                    <button type="submit" name="reset_deck_progress" class="btn btn-warning" 
+                                            data-translate-key="reset_button" title="Сбросить прогресс по колоде">
                                         🔄 Сбросить
                                     </button>
                                 </form>
@@ -558,14 +436,14 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                 </div>
             <?php else: ?>
                 <div class="empty-state">
-                    <h3>📚 Колоды не назначены</h3>
-                    <p>Ученику не назначены колоды для изучения.</p>
+                    <h3 data-translate-key="no_decks_assigned_title">📚 Колоды не назначены</h3>
+                    <p data-translate-key="no_decks_assigned_text">Ученику не назначены колоды для изучения.</p>
                 </div>
             <?php endif; ?>
         </div>
 
         <div class="card">
-            <h2>📊 Прогресс по тестам</h2>
+            <h2 data-translate-key="test_progress_title">📊 Прогресс по тестам</h2>
             
             <!-- Общая статистика по тестам -->
             <?php if ($test_statistics && $test_statistics['total_attempts'] > 0): ?>
@@ -573,19 +451,19 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                     <div class="stats-grid">
                         <div class="stat-item">
                             <div class="stat-number"><?php echo $test_statistics['total_attempts']; ?></div>
-                            <div class="stat-label">Всего попыток</div>
+                            <div class="stat-label" data-translate-key="total_attempts_label">Всего попыток</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-number"><?php echo round($test_statistics['average_score'], 1); ?>%</div>
-                            <div class="stat-label">Средний балл</div>
+                            <div class="stat-label" data-translate-key="average_score_label">Средний балл</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-number"><?php echo $test_statistics['best_score']; ?>%</div>
-                            <div class="stat-label">Лучший результат</div>
+                            <div class="stat-label" data-translate-key="best_score_label">Лучший результат</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-number"><?php echo count($all_test_results); ?></div>
-                            <div class="stat-label">Пройдено тестов</div>
+                            <div class="stat-label" data-translate-key="tests_completed_label">Пройдено тестов</div>
                         </div>
                     </div>
                 </div>
@@ -593,14 +471,14 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                 <!-- Результаты по отдельным тестам -->
                 <?php if (!empty($all_test_results)): ?>
                     <div class="test-results-section">
-                        <h3>Результаты по тестам</h3>
+                        <h3 data-translate-key="test_results_title">Результаты по тестам</h3>
                         <div class="test-results-list">
                             <?php foreach ($all_test_results as $result): ?>
                                 <div class="test-result-item">
                                     <div class="test-result-header">
                                         <div class="test-name">
                                             <strong><?php echo htmlspecialchars($result['test']['name']); ?></strong>
-                                            <small>Колода: <?php echo htmlspecialchars($result['deck']['name']); ?></small>
+                                            <small><span data-translate-key="deck_name_label">Колода:</span> <?php echo htmlspecialchars($result['deck']['name']); ?></small>
                                         </div>
                                         <div class="test-best-score">
                                             <span class="score-badge 
@@ -617,15 +495,15 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                                     </div>
                                     <div class="test-result-details">
                                         <div class="detail-item">
-                                            <span class="detail-label">Попыток:</span>
+                                            <span class="detail-label" data-translate-key="attempts_count_label">Попыток:</span>
                                             <span class="detail-value"><?php echo $result['stats']['attempts_count']; ?></span>
                                         </div>
                                         <div class="detail-item">
-                                            <span class="detail-label">Средний балл:</span>
+                                            <span class="detail-label" data-translate-key="avg_score_label">Средний балл:</span>
                                             <span class="detail-value"><?php echo round($result['stats']['average_score'], 1); ?>%</span>
                                         </div>
                                         <div class="detail-item">
-                                            <span class="detail-label">Последняя попытка:</span>
+                                            <span class="detail-label" data-translate-key="last_attempt_label">Последняя попытка:</span>
                                             <span class="detail-value">
                                                 <?php echo date('d.m.Y H:i', strtotime($result['stats']['last_attempt'])); ?>
                                             </span>
@@ -640,7 +518,7 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                 <!-- Последние попытки -->
                 <?php if (!empty($recent_attempts)): ?>
                     <div class="recent-attempts-section">
-                        <h3>Последние попытки</h3>
+                        <h3 data-translate-key="recent_attempts_title">Последние попытки</h3>
                         <div class="attempts-list">
                             <?php foreach (array_slice($recent_attempts, 0, 5) as $attempt): ?>
                                 <div class="attempt-item">
@@ -662,7 +540,7 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                                         </div>
                                     </div>
                                     <div class="attempt-details">
-                                        <span><?php echo $attempt['correct_answers']; ?>/<?php echo $attempt['total_questions']; ?> правильных</span>
+                                        <span><?php echo $attempt['correct_answers']; ?>/<?php echo $attempt['total_questions']; ?> <span data-translate-key="correct_answers_label">правильных</span></span>
                                         <span><?php echo date('d.m.Y H:i', strtotime($attempt['completed_at'])); ?></span>
                                     </div>
                                 </div>
@@ -672,20 +550,21 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 10);
                 <?php endif; ?>
             <?php else: ?>
                 <div class="empty-state">
-                    <h3>📝 Тесты не пройдены</h3>
-                    <p>Ученик еще не проходил тесты.</p>
+                    <h3 data-translate-key="no_tests_completed_title">📝 Тесты не пройдены</h3>
+                    <p data-translate-key="no_tests_completed_text">Ученик еще не проходил тесты.</p>
                 </div>
             <?php endif; ?>
         </div>
 
         <div class="card">
             <div class="danger-zone">
-                <h3>⚠️ Опасная зона</h3>
-                <p>Полный сброс прогресса удалит ВСЕ данные об изучении слов и результаты тестов этого ученика. 
+                <h3 data-translate-key="danger_zone_title">⚠️ Опасная зона</h3>
+                <p data-translate-key="danger_zone_text">Полный сброс прогресса удалит ВСЕ данные об изучении слов и результаты тестов этого ученика. 
                    Это действие нельзя отменить!</p>
                 <form method="POST" action="" 
-                      onsubmit="return confirm('ВНИМАНИЕ! Вы собираетесь полностью сбросить весь прогресс ученика (включая слова и тесты). Все данные об изучении будут потеряны безвозвратно. Вы уверены?')">
-                    <button type="submit" name="reset_all_progress" class="btn btn-danger">
+                      onsubmit="return confirm('ВНИМАНИЕ! Вы собираетесь полностью сбросить весь прогресс ученика (включая слова и тесты). Все данные об изучении будут потеряны безвозвратно. Вы уверены?')"
+                      data-confirm-key="reset_all_progress_confirm">
+                    <button type="submit" name="reset_all_progress" class="btn btn-danger" data-translate-key="reset_all_progress_button">
                         🗑️ Сбросить весь прогресс (слова и тесты)
                     </button>
                 </form>

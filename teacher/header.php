@@ -2,6 +2,11 @@
 // Этот файл предполагается для включения в другие PHP скрипты,
 // поэтому здесь нет необходимости в session_start() или require_once,
 // так как они уже должны быть в вызывающем файле.
+
+// Подключаем переводы, если они еще не подключены
+if (!isset($translations)) {
+    require_once '../includes/translations.php';
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -131,15 +136,27 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1><i class="<?php echo isset($page_icon) ? $page_icon : 'fas fa-chalkboard-teacher'; ?>"></i> <?php echo isset($page_title) ? htmlspecialchars($page_title) : 'QuizCard'; ?></h1>
+                <h1 <?php 
+                    $current_page = basename($_SERVER['PHP_SELF']);
+                    $translate_key = '';
+                    switch($current_page) {
+                        case 'dashboard.php': $translate_key = 'dashboard_title'; break;
+                        case 'decks.php': $translate_key = 'decks_title'; break;
+                        case 'tests.php': $translate_key = 'tests_title'; break;
+                        case 'students.php': $translate_key = 'students_title'; break;
+                        case 'account.php': $translate_key = 'account_title'; break;
+                        default: $translate_key = 'dashboard_title'; break;
+                    }
+                    echo $translate_key ? 'data-translate-key="' . $translate_key . '"' : '';
+                ?>><i class="<?php echo isset($page_icon) ? $page_icon : 'fas fa-chalkboard-teacher'; ?>"></i> <?php echo isset($page_title) ? htmlspecialchars($page_title) : 'QuizCard'; ?></h1>
             </div>
             <div class="nav-links">
-                <a href="dashboard.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">Главная</a>
-                <a href="decks.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'decks.php' ? 'active' : ''; ?>">Колоды</a>
-                <a href="tests.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'tests.php' ? 'active' : ''; ?>">Тесты</a>
-                <a href="students.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'students.php' ? 'active' : ''; ?>">Ученики</a>
-                <a href="account.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'account.php' ? 'active' : ''; ?>">Аккаунт</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <a href="dashboard.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>" data-translate-key="nav_dashboard">Главная</a>
+                <a href="decks.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'decks.php' ? 'active' : ''; ?>" data-translate-key="nav_decks">Колоды</a>
+                <a href="tests.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'tests.php' ? 'active' : ''; ?>" data-translate-key="nav_tests">Тесты</a>
+                <a href="students.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'students.php' ? 'active' : ''; ?>" data-translate-key="nav_students">Ученики</a>
+                <a href="account.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'account.php' ? 'active' : ''; ?>" data-translate-key="nav_account">Аккаунт</a>
+                <a href="../logout.php" class="btn" data-translate-key="nav_logout">Выйти</a>
             </div>
         </div>
     </header>

@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../classes/User.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -34,23 +35,23 @@ if ($_POST && isset($_POST['update_student'])) {
     
     // Валидация
     if (empty($new_username) || empty($new_first_name) || empty($new_last_name)) {
-        $error = 'Все поля обязательны для заполнения';
+        $error = 'edit_student_all_fields_required';
     } elseif (!empty($new_password) && strlen($new_password) < 6) {
-        $error = 'Пароль должен содержать минимум 6 символов';
+        $error = 'edit_student_password_min_length';
     } elseif (!empty($new_password) && $new_password !== $confirm_password) {
-        $error = 'Пароли не совпадают';
+        $error = 'edit_student_passwords_not_match';
     } else {
         // Обновляем данные
         $password_to_update = !empty($new_password) ? $new_password : null;
         
         if ($user->updateStudent($student_id, $teacher_id, $new_username, $password_to_update, $new_first_name, $new_last_name)) {
-            $success = 'Данные ученика успешно обновлены';
+            $success = 'edit_student_data_updated';
             // Обновляем локальные данные для отображения
             $student_info['username'] = $new_username;
             $student_info['first_name'] = $new_first_name;
             $student_info['last_name'] = $new_last_name;
         } else {
-            $error = 'Ошибка при обновлении данных. Возможно, пользователь с таким логином уже существует.';
+            $error = 'edit_student_update_error';
         }
     }
 }
@@ -60,7 +61,7 @@ if ($_POST && isset($_POST['update_student'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Редактирование ученика - QuizCard</title>
+    <title data-translate-key="edit_student_title">Редактирование ученика</title>
     <style>
         * {
             margin: 0;
@@ -222,6 +223,40 @@ if ($_POST && isset($_POST['update_student'])) {
             padding-top: 1.5rem;
             border-top: 1px solid #e9ecef;
         }
+        
+        /* Language Switcher */
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .language-switcher button {
+            background: none;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #667eea;
+        }
+        
+        .language-switcher button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .language-switcher button:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+        }
 
         @media (max-width: 768px) {
             body {
@@ -245,69 +280,71 @@ if ($_POST && isset($_POST['update_student'])) {
 </head>
 <body>
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="header">
-            <h1>👨‍🎓 Редактирование ученика</h1>
-            <p>Изменение данных доступа и личной информации</p>
+            <h1 data-translate-key="edit_student_title">👨‍🎓 Редактирование ученика</h1>
+            <p data-translate-key="edit_student_subtitle">Изменение данных доступа и личной информации</p>
         </div>
 
         <div class="content">
             <div class="student-info">
-                <h3>Текущие данные ученика:</h3>
-                <p><strong>Имя:</strong> <?php echo htmlspecialchars($student_info['first_name'] . ' ' . $student_info['last_name']); ?></p>
-                <p><strong>Логин:</strong> <?php echo htmlspecialchars($student_info['username']); ?></p>
-                <p><strong>Дата регистрации:</strong> <?php echo date('d.m.Y', strtotime($student_info['created_at'])); ?></p>
+                <h3 data-translate-key="current_student_data">Текущие данные ученика:</h3>
+                <p><strong data-translate-key="student_name_label">Имя:</strong> <?php echo htmlspecialchars($student_info['first_name'] . ' ' . $student_info['last_name']); ?></p>
+                <p><strong data-translate-key="student_login_label">Логин:</strong> <?php echo htmlspecialchars($student_info['username']); ?></p>
+                <p><strong data-translate-key="registration_date_label">Дата регистрации:</strong> <?php echo date('d.m.Y', strtotime($student_info['created_at'])); ?></p>
             </div>
 
             <?php if ($error): ?>
-                <div class="error"><?php echo htmlspecialchars($error); ?></div>
+                <div class="error"><?php echo isset($translations['ru'][$error]) ? $translations['ru'][$error] : htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
             <?php if ($success): ?>
-                <div class="success"><?php echo htmlspecialchars($success); ?></div>
+                <div class="success"><?php echo isset($translations['ru'][$success]) ? $translations['ru'][$success] : htmlspecialchars($success); ?></div>
             <?php endif; ?>
 
             <form method="POST">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="first_name">Имя:</label>
+                        <label for="first_name" data-translate-key="edit_student_first_name">Имя:</label>
                         <input type="text" id="first_name" name="first_name" 
                                value="<?php echo htmlspecialchars($student_info['first_name']); ?>" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="last_name">Фамилия:</label>
+                        <label for="last_name" data-translate-key="edit_student_last_name">Фамилия:</label>
                         <input type="text" id="last_name" name="last_name" 
                                value="<?php echo htmlspecialchars($student_info['last_name']); ?>" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="username">Логин:</label>
+                    <label for="username" data-translate-key="edit_student_username">Логин:</label>
                     <input type="text" id="username" name="username" 
                            value="<?php echo htmlspecialchars($student_info['username']); ?>" required>
                 </div>
 
                 <div class="password-note">
-                    💡 <strong>Изменение пароля:</strong> Оставьте поля пароля пустыми, если не хотите изменять пароль.
+                    💡 <strong data-translate-key="password_change_note">Изменение пароля:</strong> <span data-translate-key="password_change_note_text">Оставьте поля пароля пустыми, если не хотите изменять пароль.</span>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="password">Новый пароль (опционально):</label>
+                        <label for="password" data-translate-key="new_password_optional">Новый пароль (опционально):</label>
                         <input type="password" id="password" name="password" 
-                               placeholder="Оставьте пустым, чтобы не менять">
+                               data-translate-key="new_password_placeholder" placeholder="Оставьте пустым, чтобы не менять">
                     </div>
 
                     <div class="form-group">
-                        <label for="confirm_password">Подтвердите пароль:</label>
+                        <label for="confirm_password" data-translate-key="confirm_new_password">Подтвердите пароль:</label>
                         <input type="password" id="confirm_password" name="confirm_password" 
-                               placeholder="Повторите новый пароль">
+                               data-translate-key="confirm_new_password_placeholder" placeholder="Повторите новый пароль">
                     </div>
                 </div>
 
                 <div class="actions">
-                    <a href="students.php" class="btn btn-secondary">← Назад к списку</a>
-                    <button type="submit" name="update_student" class="btn btn-primary">💾 Сохранить изменения</button>
+                    <a href="students.php" class="btn btn-secondary" data-translate-key="back_to_students">← Назад к списку</a>
+                    <button type="submit" name="update_student" class="btn btn-primary" data-translate-key="save_changes">💾 Сохранить изменения</button>
                 </div>
             </form>
         </div>
@@ -317,13 +354,16 @@ if ($_POST && isset($_POST['update_student'])) {
         // Синхронизация полей пароля
         document.getElementById('password').addEventListener('input', function() {
             const confirmField = document.getElementById('confirm_password');
+            const currentLang = localStorage.getItem('selectedLanguage') || 'ru';
+            const translations = <?php echo json_encode($translations); ?>;
+            
             if (this.value === '') {
                 confirmField.value = '';
                 confirmField.disabled = true;
-                confirmField.placeholder = 'Поле заблокировано';
+                confirmField.placeholder = translations[currentLang]['password_field_locked'] || 'Поле заблокировано';
             } else {
                 confirmField.disabled = false;
-                confirmField.placeholder = 'Повторите новый пароль';
+                confirmField.placeholder = translations[currentLang]['repeat_new_password'] || 'Повторите новый пароль';
             }
         });
 

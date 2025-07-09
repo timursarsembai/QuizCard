@@ -4,6 +4,7 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -166,7 +167,7 @@ $assigned_student_ids = array_column($assigned_students, 'id');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Словарь ученика</title>
+    <title data-translate-key="vocabulary_title">QuizCard - Редактирование словаря</title>
     <style>
         * {
             margin: 0;
@@ -628,19 +629,21 @@ $assigned_student_ids = array_column($assigned_students, 'id');
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>📝 Редактирование словаря</h1>
+                <h1 data-translate-key="vocabulary_title">📝 Редактирование словаря</h1>
                 <div class="breadcrumb">
-                    <a href="decks.php">Колоды</a> → Словарь колоды
+                    <a href="decks.php" data-translate-key="nav_decks">Колоды</a> → <span data-translate-key="vocabulary_breadcrumb">Словарь колоды</span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="decks.php" class="btn">← Назад</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <a href="decks.php" class="btn" data-translate-key="back_button">← Назад</a>
+                <a href="../logout.php" class="btn" data-translate-key="nav_logout">Выйти</a>
             </div>
         </div>
     </header>
 
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="student-info" style="border-left-color: <?php echo htmlspecialchars($current_deck['color']); ?>">
             <h2>Колода: <?php echo htmlspecialchars($current_deck['name']); ?></h2>
             <?php if ($current_deck['description']): ?>
@@ -659,15 +662,15 @@ $assigned_student_ids = array_column($assigned_students, 'id');
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($words); ?></div>
-                <div class="stat-label">Всего слов</div>
+                <div class="stat-label" data-translate-key="total_words_stat">Всего слов</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($words, function($w) { return !empty($w['image_path']); })); ?></div>
-                <div class="stat-label">С изображениями</div>
+                <div class="stat-label" data-translate-key="with_images_stat">С изображениями</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo array_sum(array_column($words, 'assigned_students')); ?></div>
-                <div class="stat-label">Назначений ученикам</div>
+                <div class="stat-label" data-translate-key="student_assignments_stat">Назначений ученикам</div>
             </div>
         </div>
 
@@ -680,15 +683,15 @@ $assigned_student_ids = array_column($assigned_students, 'id');
         <?php endif; ?>
 
         <div class="card">
-            <h2>⚙️ Настройки колоды</h2>
+            <h2 data-translate-key="deck_settings">⚙️ Настройки колоды</h2>
             <form method="POST" action="">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="deck_name">Название колоды:</label>
+                        <label for="deck_name" data-translate-key="deck_name_label">Название колоды:</label>
                         <input type="text" id="deck_name" name="deck_name" value="<?php echo htmlspecialchars($current_deck['name']); ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="deck_color">Цвет колоды:</label>
+                        <label for="deck_color" data-translate-key="deck_color_label">Цвет колоды:</label>
                         <div style="display: flex; align-items: center;">
                             <input type="color" id="deck_color" name="deck_color" value="<?php echo htmlspecialchars($current_deck['color']); ?>" 
                                    onchange="updateColorPreview(this.value)">
@@ -696,54 +699,54 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="daily_word_limit">Дневной лимит новых слов:</label>
+                        <label for="daily_word_limit" data-translate-key="daily_word_limit_label">Дневной лимит новых слов:</label>
                         <input type="number" id="daily_word_limit" name="daily_word_limit" min="1" max="100" 
                                value="<?php echo intval($current_deck['daily_word_limit'] ?? 20); ?>" required>
-                        <small style="color: #666; font-size: 0.9em;">Количество новых слов, которые студент может изучить за день (1-100)</small>
+                        <small style="color: #666; font-size: 0.9em;" data-translate-key="daily_word_limit_help">Количество новых слов, которые студент может изучить за день (1-100)</small>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="deck_description">Описание колоды:</label>
-                    <textarea id="deck_description" name="deck_description" placeholder="Краткое описание темы колоды..."><?php echo htmlspecialchars($current_deck['description'] ?? ''); ?></textarea>
+                    <label for="deck_description" data-translate-key="deck_description_label">Описание колоды:</label>
+                    <textarea id="deck_description" name="deck_description" data-translate-key="deck_description_placeholder" placeholder="Краткое описание темы колоды..."><?php echo htmlspecialchars($current_deck['description'] ?? ''); ?></textarea>
                 </div>
-                <button type="submit" name="edit_deck" class="btn btn-primary">💾 Сохранить изменения</button>
+                <button type="submit" name="edit_deck" class="btn btn-primary" data-translate-key="save_changes_button">💾 Сохранить изменения</button>
             </form>
         </div>
 
         <div class="card">
-            <h2>Добавить новое слово</h2>
+            <h2 data-translate-key="add_new_word">Добавить новое слово</h2>
             <form method="POST" action="" enctype="multipart/form-data">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="foreign_word">Изучаемое слово:</label>
+                        <label for="foreign_word" data-translate-key="foreign_word_label">Изучаемое слово:</label>
                         <input type="text" id="foreign_word" name="foreign_word" required>
                     </div>
                     <div class="form-group">
-                        <label for="translation">Перевод:</label>
+                        <label for="translation" data-translate-key="translation_label">Перевод:</label>
                         <input type="text" id="translation" name="translation" required>
                     </div>
                     <div class="form-group">
-                        <label for="image">Изображение (опционально):</label>
+                        <label for="image" data-translate-key="image_label">Изображение (опционально):</label>
                         <input type="file" id="image" name="image" accept="image/*">
                     </div>
                 </div>
-                <button type="submit" name="add_word" class="btn btn-primary">Добавить слово</button>
+                <button type="submit" name="add_word" class="btn btn-primary" data-translate-key="add_word_button">Добавить слово</button>
             </form>
         </div>
 
         <div class="card">
-            <h2>Словарь</h2>
+            <h2 data-translate-key="vocabulary_section">Словарь</h2>
             <?php if (empty($words)): ?>
-                <p>В словаре пока нет слов.</p>
+                <p data-translate-key="no_words_yet">В словаре пока нет слов.</p>
             <?php else: ?>
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Изучаемое слово</th>
-                            <th>Перевод</th>
-                            <th>Изображение</th>
-                            <th>Назначено ученикам</th>
-                            <th>Действия</th>
+                            <th data-translate-key="table_foreign_word">Изучаемое слово</th>
+                            <th data-translate-key="table_translation">Перевод</th>
+                            <th data-translate-key="table_image">Изображение</th>
+                            <th data-translate-key="table_assigned_students">Назначено ученикам</th>
+                            <th data-translate-key="table_actions">Действия</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -775,34 +778,40 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                                         <?php else: ?>
                                             <button type="button" class="btn btn-sm btn-outline" 
                                                     onclick="showImageUpload(<?php echo $word['id']; ?>)" 
-                                                    title="Добавить изображение">
+                                                    title="Добавить изображение"
+                                                    data-translate-key="add_image_button">
                                                 ✏️ Добавить фото
                                             </button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <td><?php echo $word['assigned_students'] ?: 0; ?> ученика</td>
+                                <td><?php echo $word['assigned_students'] ?: 0; ?> <span data-translate-key="students_count">ученика</span></td>
                                 <td class="actions">
                                     <button type="button" class="btn btn-sm btn-primary" 
                                             id="edit-btn-<?php echo $word['id']; ?>"
-                                            onclick="toggleEdit(<?php echo $word['id']; ?>)">
+                                            onclick="toggleEdit(<?php echo $word['id']; ?>)"
+                                            data-translate-key="edit_word_button">
                                         ✏️ Изменить
                                     </button>
                                     <button type="button" class="btn btn-sm btn-success" 
                                             id="save-btn-<?php echo $word['id']; ?>" 
                                             onclick="saveWord(<?php echo $word['id']; ?>)" 
-                                            style="display: none;">
+                                            style="display: none;"
+                                            data-translate-key="save_word_button">
                                         💾 Сохранить
                                     </button>
                                     <button type="button" class="btn btn-sm btn-secondary" 
                                             id="cancel-btn-<?php echo $word['id']; ?>" 
                                             onclick="cancelEdit(<?php echo $word['id']; ?>)" 
-                                            style="display: none;">
+                                            style="display: none;"
+                                            data-translate-key="cancel_edit_button">
                                         ❌ Отмена
                                     </button>
                                     <a href="?deck_id=<?php echo $deck_id; ?>&delete_word=<?php echo $word['id']; ?>" 
                                        class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Вы уверены, что хотите удалить это слово?')">
+                                       onclick="return confirm('Вы уверены, что хотите удалить это слово?')"
+                                       data-confirm-key="delete_word_confirm"
+                                       data-translate-key="delete_word_button">
                                         🗑️ Удалить
                                     </a>
                                 </td>
@@ -817,7 +826,7 @@ $assigned_student_ids = array_column($assigned_students, 'id');
         <div id="imageModal" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close" onclick="closeImageModal()">&times;</span>
-                <h3>Изменить изображение</h3>
+                <h3 data-translate-key="change_image_title">Изменить изображение</h3>
                 <form id="imageForm" method="POST" enctype="multipart/form-data">
                     <input type="hidden" id="imageWordId" name="word_id" value="">
                     <input type="hidden" name="current_image" id="currentImagePath" value="">
@@ -826,14 +835,14 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                     <input type="hidden" name="edit_word" value="1">
                     
                     <div class="form-group">
-                        <label for="newImage">Выберите новое изображение:</label>
+                        <label for="newImage" data-translate-key="select_new_image">Выберите новое изображение:</label>
                         <input type="file" id="newImage" name="image" accept="image/*" required>
-                        <small>Поддерживаемые форматы: JPG, PNG, GIF, WebP</small>
+                        <small data-translate-key="supported_formats">Поддерживаемые форматы: JPG, PNG, GIF, WebP</small>
                     </div>
                     
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">📤 Загрузить</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeImageModal()">Отмена</button>
+                        <button type="submit" class="btn btn-primary" data-translate-key="upload_button">📤 Загрузить</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeImageModal()" data-translate-key="cancel_button">Отмена</button>
                     </div>
                 </form>
             </div>
@@ -911,7 +920,10 @@ $assigned_student_ids = array_column($assigned_students, 'id');
             const translation = document.getElementById(`translation-edit-${wordId}`).value.trim();
             
             if (!foreignWord || !translation) {
-                alert('Заполните все поля!');
+                const alertMessage = translations[currentLang] && translations[currentLang]['fill_all_fields'] 
+                    ? translations[currentLang]['fill_all_fields'] 
+                    : 'Заполните все поля!';
+                alert(alertMessage);
                 return;
             }
             

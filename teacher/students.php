@@ -5,6 +5,7 @@ require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -29,10 +30,10 @@ if ($_POST && isset($_POST['add_student'])) {
     $last_name = trim($_POST['last_name']);
     
     if ($user->createStudent($username, $password, $first_name, $last_name, $teacher_id)) {
-        $success = "Ученик успешно добавлен!";
+        $success = "student_added_success";
         $students = $user->getStudentsByTeacher($teacher_id); // Обновляем список
     } else {
-        $error = "Ошибка при добавлении ученика";
+        $error = "student_add_error";
     }
 }
 
@@ -40,10 +41,10 @@ if ($_POST && isset($_POST['add_student'])) {
 if ($_GET && isset($_GET['delete_student'])) {
     $student_id = $_GET['delete_student'];
     if ($user->deleteStudent($student_id, $teacher_id)) {
-        $success = "Ученик успешно удален!";
+        $success = "student_deleted_success";
         $students = $user->getStudentsByTeacher($teacher_id);
     } else {
-        $error = "Ошибка при удалении ученика";
+        $error = "student_delete_error";
     }
 }
 
@@ -58,19 +59,19 @@ if ($_POST && isset($_POST['reset_progress'])) {
     $tests_reset = $test->resetStudentTestProgress($student_id, $teacher_id);
     
     if ($vocabulary_reset && $tests_reset) {
-        $success = "Прогресс ученика успешно сброшен (слова и тесты)!";
+        $success = "student_progress_reset_success";
     } else {
-        $error = "Ошибка при сбросе прогресса";
+        $error = "progress_reset_error";
     }
 }
 
 $sortable_fields = [
-    'last_name' => 'Фамилия',
-    'avg_deck_progress' => 'Прогресс (колоды)',
-    'avg_test_score' => 'Прогресс (тесты)',
-    'learned_words' => 'Изучено слов',
-    'words_to_review' => 'К изучению',
-    'deck_count' => 'Количество колод'
+    'last_name' => 'sort_surname',
+    'avg_deck_progress' => 'sort_deck_progress',
+    'avg_test_score' => 'sort_test_progress',
+    'learned_words' => 'sort_learned_words',
+    'words_to_review' => 'sort_words_to_review',
+    'deck_count' => 'sort_deck_count'
 ];
 
 $sort_by = $_GET['sort_by'] ?? 'last_name';
@@ -344,52 +345,55 @@ include 'header.php';
 </style>
 
 <div class="container">
+    <?php include 'language_switcher.php'; ?>
+    
     <?php if (isset($success)): ?>
-        <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+        <div class="alert alert-success" data-translate-key="<?php echo $success; ?>"><?php echo htmlspecialchars($success); ?></div>
     <?php endif; ?>
 
     <?php if (isset($error)): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+        <div class="alert alert-danger" data-translate-key="<?php echo $error; ?>"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
 
     <div class="card">
-        <h2>Добавить нового ученика</h2>
+        <h2 data-translate-key="add_new_student">Добавить нового ученика</h2>
         <form method="POST" action="">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="username">Имя пользователя:</label>
+                    <label for="username" data-translate-key="student_username">Имя пользователя:</label>
                     <input type="text" id="username" name="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Пароль:</label>
+                    <label for="password" data-translate-key="student_password">Пароль:</label>
                     <input type="password" id="password" name="password" required>
                 </div>
                 <div class="form-group">
-                    <label for="first_name">Имя:</label>
+                    <label for="first_name" data-translate-key="student_first_name">Имя:</label>
                     <input type="text" id="first_name" name="first_name" required>
                 </div>
                 <div class="form-group">
-                    <label for="last_name">Фамилия:</label>
+                    <label for="last_name" data-translate-key="student_last_name">Фамилия:</label>
                     <input type="text" id="last_name" name="last_name" required>
                 </div>
             </div>
-            <button type="submit" name="add_student" class="btn btn-primary">Добавить ученика</button>
+            <button type="submit" name="add_student" class="btn btn-primary" data-translate-key="add_student_button">Добавить ученика</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>Мои ученики (<?php echo count($students); ?>)</h2>
+        <h2 data-translate-key="my_students">Мои ученики (<?php echo count($students); ?>)</h2>
 
         <?php if (!empty($students)): ?>
             <div class="sort-controls">
-                <label>Сортировать по:</label>
+                <label data-translate-key="sort_by">Сортировать по:</label>
                 <?php foreach ($sortable_fields as $field => $label): 
                     $is_active = ($field === $sort_by);
                     $order_for_link = ($is_active && $sort_order === 'desc') ? 'asc' : 'desc';
                     $icon = $is_active ? ($sort_order === 'desc' ? '<i class="fas fa-arrow-down"></i>' : '<i class="fas fa-arrow-up"></i>') : '';
                 ?>
                     <a href="?sort_by=<?php echo $field; ?>&sort_order=<?php echo $order_for_link; ?>" 
-                       class="btn <?php echo $is_active ? 'active' : ''; ?>">
+                       class="btn <?php echo $is_active ? 'active' : ''; ?>" 
+                       data-translate-key="<?php echo $label; ?>">
                         <?php echo $label . ' ' . $icon; ?>
                     </a>
                 <?php endforeach; ?>
@@ -398,8 +402,8 @@ include 'header.php';
 
         <?php if (empty($students)): ?>
             <div class="empty-state">
-                <h3>👨‍🎓 Учеников пока нет</h3>
-                <p>Добавьте учеников для начала работы с платформой.</p>
+                <h3 data-translate-key="no_students_yet">👨‍🎓 Учеников пока нет</h3>
+                <p data-translate-key="add_students_platform">Добавьте учеников для начала работы с платформой.</p>
             </div>
         <?php else: ?>
             <div class="students-grid">
@@ -414,43 +418,43 @@ include 'header.php';
                             <div class="student-info">
                                 <div class="student-name"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?></div>
                                 <div class="student-username">@<?php echo htmlspecialchars($student['username']); ?></div>
-                                <div class="student-date">Регистрация: <?php echo date('d.m.Y', strtotime($student['created_at'])); ?></div>
+                                <div class="student-date"><span data-translate-key="registration_label">Регистрация:</span> <?php echo date('d.m.Y', strtotime($student['created_at'])); ?></div>
                             </div>
                         </div>
                         
                         <div class="student-stats">
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $student['deck_count']; ?></div>
-                                <div class="stat-label">Колод</div>
+                                <div class="stat-label" data-translate-key="decks_label">Колод</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $student['total_words']; ?></div>
-                                <div class="stat-label">Слов</div>
+                                <div class="stat-label" data-translate-key="words_label">Слов</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $student['words_to_review']; ?></div>
-                                <div class="stat-label">К изучению</div>
+                                <div class="stat-label" data-translate-key="to_learn_label">К изучению</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $student['learned_words']; ?></div>
-                                <div class="stat-label">Изучено</div>
+                                <div class="stat-label" data-translate-key="learned_label">Изучено</div>
                             </div>
                         </div>
 
                         <div class="student-stats secondary-stats">
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo round($student['avg_deck_progress'], 1); ?>%</div>
-                                <div class="stat-label">Прогресс по колодам</div>
+                                <div class="stat-label" data-translate-key="deck_progress_label">Прогресс по колодам</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo round($student['avg_test_score'], 1); ?>%</div>
-                                <div class="stat-label">Средний балл за тесты</div>
+                                <div class="stat-label" data-translate-key="avg_test_score_label">Средний балл за тесты</div>
                             </div>
                         </div>
 
                         <?php if (!empty($student_decks)): ?>
                             <div class="assigned-decks">
-                                <div class="decks-label">Назначенные колоды:</div>
+                                <div class="decks-label" data-translate-key="assigned_decks_label">Назначенные колоды:</div>
                                 <div class="deck-tags">
                                     <?php foreach ($student_decks as $deck_stat): ?>
                                         <span class="deck-tag" style="background-color: <?php echo htmlspecialchars($deck_stat['color']); ?>20; border-color: <?php echo htmlspecialchars($deck_stat['color']); ?>;">
@@ -462,7 +466,7 @@ include 'header.php';
                             </div>
                         <?php else: ?>
                             <div class="no-decks">
-                                <em>Колоды не назначены</em>
+                                <em data-translate-key="no_decks_assigned">Колоды не назначены</em>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -470,17 +474,21 @@ include 'header.php';
                     <div class="student-actions">
                         <a href="edit_student.php?id=<?php echo $student['id']; ?>" 
                            class="btn btn-info" 
+                           data-translate-key="edit_data_title"
                            title="Редактировать данные">✏️</a>
                         <a href="student_progress.php?student_id=<?php echo $student['id']; ?>" 
                            class="btn btn-primary" 
+                           data-translate-key="progress_management_title"
                            title="Управление прогрессом">📊</a>
-                        <form method="POST" action="" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите сбросить весь прогресс обучения этого ученика (включая результаты тестов и изученные слова)? Это действие нельзя отменить.')">
+                        <form method="POST" action="" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите сбросить весь прогресс обучения этого ученика (включая результаты тестов и изученные слова)? Это действие нельзя отменить.')" data-confirm-key="reset_progress_confirm">
                             <input type="hidden" name="student_id" value="<?php echo $student['id']; ?>">
-                            <button type="submit" name="reset_progress" class="btn btn-warning" title="Сбросить прогресс (слова и тесты)">🔄</button>
+                            <button type="submit" name="reset_progress" class="btn btn-warning" data-translate-key="reset_progress_title" title="Сбросить прогресс (слова и тесты)">🔄</button>
                         </form>
                         <a href="?delete_student=<?php echo $student['id']; ?>" 
                            class="btn btn-danger" 
                            onclick="return confirm('Вы уверены, что хотите удалить этого ученика?')" 
+                           data-confirm-key="delete_student_confirm"
+                           data-translate-key="delete_student_title"
                            title="Удалить ученика">🗑️</a>
                     </div>
                 </div>
@@ -500,6 +508,41 @@ include 'header.php';
             setTimeout(() => alert.remove(), 500);
         });
     }, 5000);
+    
+    // Функция для перевода сообщений об успехе/ошибке
+    function translateMessages() {
+        // Переводим сообщения об успехе
+        const successAlert = document.querySelector('.alert-success');
+        if (successAlert) {
+            const key = successAlert.getAttribute('data-translate-key');
+            if (key && translations[currentLang] && translations[currentLang][key]) {
+                successAlert.textContent = translations[currentLang][key];
+            }
+        }
+        
+        // Переводим сообщения об ошибке
+        const errorAlert = document.querySelector('.alert-danger');
+        if (errorAlert) {
+            const key = errorAlert.getAttribute('data-translate-key');
+            if (key && translations[currentLang] && translations[currentLang][key]) {
+                errorAlert.textContent = translations[currentLang][key];
+            }
+        }
+    }
+    
+    // Добавляем перевод сообщений к основной функции перевода
+    if (typeof translatePage === 'function') {
+        const originalTranslatePage = translatePage;
+        translatePage = function() {
+            originalTranslatePage();
+            translateMessages();
+        };
+    }
+    
+    // Переводим сообщения при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        translateMessages();
+    });
 </script>
 </body>
 </html>

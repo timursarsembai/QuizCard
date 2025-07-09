@@ -1,88 +1,9 @@
 <?php
 session_start();
+require_once 'includes/translations.php';
 
 // 1. Централизованные переводы
-$translations = [
-    'kk' => [
-        'page_title' => 'QuizCard - Мұғалімдердің панелі',
-        'panel_title' => 'Мұғалімдер үшін басқару панелі',
-        'login_tab' => 'Кіру',
-        'register_tab' => 'Тіркелу',
-        'username_label' => 'Пайдаланушы аты',
-        'password_label' => 'Құпия сөз',
-        'login_button' => 'Кіру',
-        'student_link' => '👨‍🎓 Оқушылар үшін кіру',
-        'first_name_label' => 'Аты',
-        'last_name_label' => 'Тегі',
-        'email_label' => 'Email',
-        'confirm_password_label' => 'Құпия сөзді растау',
-        'register_button' => 'Тіркелу',
-        'error_db_connection' => 'Дерекқорға қосылу қатесі. <a href="setup.php">ДҚ параметрін тексеріңіз</a>',
-        'error_fill_fields' => 'Пайдаланушы аты мен құпия сөзді енгізіңіз',
-        'error_invalid_credentials' => 'Жарамсыз логин немесе құпия сөз',
-        'error_teacher_only' => 'Бұл бет тек мұғалімдерге арналған.',
-        'error_password_length' => 'Құпия сөз кемінде 6 таңбадан тұруы керек',
-        'error_password_mismatch' => 'Құпия сөздер сәйкес келмейді',
-        'error_all_fields_required' => 'Барлық өрістерді толтыру міндетті',
-        'error_username_exists' => 'Бұл пайдаланушы аты бос емес',
-        'error_email_exists' => 'Бұл email бос емес',
-        'error_system' => 'Жүйе қатесі. Кейінірек қайталап көріңіз.',
-        'success_register' => 'Сіз сәтті тіркелдіңіз! Енді жүйеге кіре аласыз.'
-    ],
-    'ru' => [
-        'page_title' => 'QuizCard - Панель преподавателя',
-        'panel_title' => 'Панель управления для преподавателей',
-        'login_tab' => 'Вход',
-        'register_tab' => 'Регистрация',
-        'username_label' => 'Имя пользователя',
-        'password_label' => 'Пароль',
-        'login_button' => 'Войти',
-        'student_link' => '👨‍🎓 Вход для учеников',
-        'first_name_label' => 'Имя',
-        'last_name_label' => 'Фамилия',
-        'email_label' => 'Email',
-        'confirm_password_label' => 'Подтвердите пароль',
-        'register_button' => 'Зарегистрироваться',
-        'error_db_connection' => 'Ошибка подключения к базе данных. <a href="setup.php">Проверить настройку БД</a>',
-        'error_fill_fields' => 'Введите имя пользователя и пароль',
-        'error_invalid_credentials' => 'Неверный логин или пароль',
-        'error_teacher_only' => 'Эта страница предназначена только для преподавателей.',
-        'error_password_length' => 'Пароль должен содержать минимум 6 символов',
-        'error_password_mismatch' => 'Пароли не совпадают',
-        'error_all_fields_required' => 'Все поля обязательны для заполнения',
-        'error_username_exists' => 'Это имя пользователя уже занято',
-        'error_email_exists' => 'Этот email уже занят',
-        'error_system' => 'Ошибка системы. Попробуйте позже.',
-        'success_register' => 'Вы успешно зарегистрированы! Теперь можете войти.'
-    ],
-    'en' => [
-        'page_title' => 'QuizCard - Teacher Panel',
-        'panel_title' => 'Control Panel for Teachers',
-        'login_tab' => 'Login',
-        'register_tab' => 'Register',
-        'username_label' => 'Username',
-        'password_label' => 'Password',
-        'login_button' => 'Login',
-        'student_link' => '👨‍🎓 Student Login',
-        'first_name_label' => 'First Name',
-        'last_name_label' => 'Last Name',
-        'email_label' => 'Email',
-        'confirm_password_label' => 'Confirm Password',
-        'register_button' => 'Register',
-        'error_db_connection' => 'Database connection error. <a href="setup.php">Check DB setup</a>',
-        'error_fill_fields' => 'Please enter username and password',
-        'error_invalid_credentials' => 'Invalid login or password',
-        'error_teacher_only' => 'This page is for teachers only.',
-        'error_password_length' => 'Password must be at least 6 characters long',
-        'error_password_mismatch' => 'Passwords do not match',
-        'error_all_fields_required' => 'All fields are required',
-        'error_username_exists' => 'This username is already taken',
-        'error_email_exists' => 'This email is already taken',
-        'error_system' => 'System error. Please try again later.',
-        'success_register' => 'You have successfully registered! You can now log in.'
-    ]
-];
-
+// $translations = [ ... ]; // Этот массив теперь в includes/translations.php
 
 $error_key = '';
 $success_key = '';
@@ -161,7 +82,7 @@ if ($_POST) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-translate-key="page_title">QuizCard - Мұғалімдердің панелі</title>
+    <title data-translate-key="page_title_login">QuizCard - Мұғалімдердің панелі</title>
     <style>
         * {
             margin: 0;
@@ -396,149 +317,157 @@ if ($_POST) {
         let currentLang = 'kk';
 
         function switchLanguage(lang) {
+            if (!lang) {
+                lang = 'kk'; // Default language
+            }
             currentLang = lang;
             localStorage.setItem('selectedLanguage', lang);
 
-            document.documentElement.lang = lang;
-            document.title = translations[lang]['page_title'];
-
-            document.querySelectorAll('.language-switcher button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-lang-btn="${lang}"]`).classList.add('active');
-
-            document.querySelectorAll('[data-translate-key]').forEach(el => {
-                const key = el.getAttribute('data-translate-key');
-                if (translations[lang][key]) {
-                    if (el.tagName === 'INPUT') {
-                        el.placeholder = translations[lang][key];
-                    } else {
-                        el.innerHTML = translations[lang][key];
-                    }
+            document.querySelectorAll('[data-translate-key]').forEach(element => {
+                const key = element.getAttribute('data-translate-key');
+                if (translations[lang] && translations[lang][key]) {
+                    // Use innerHTML to support links in translations
+                    element.innerHTML = translations[lang][key];
                 }
             });
 
-            const errorElement = document.querySelector('.error');
-            if (errorElement && errorKey && translations[lang][errorKey]) {
-                errorElement.innerHTML = translations[lang][errorKey];
+            // Update active button
+            document.querySelectorAll('.language-switcher button').forEach(button => {
+                if (button.getAttribute('data-lang') === lang) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+
+            // Translate error/success messages safely
+            const errorDiv = document.querySelector('.error');
+            if (errorDiv && errorKey && translations[lang] && translations[lang][errorKey]) {
+                errorDiv.innerHTML = translations[lang][errorKey];
             }
 
-            const successElement = document.querySelector('.success');
-            if (successElement && successKey && translations[lang][successKey]) {
-                successElement.innerHTML = translations[lang][successKey];
+            const successDiv = document.querySelector('.success');
+            if (successDiv && successKey && translations[lang] && translations[lang][successKey]) {
+                successDiv.innerHTML = translations[lang][successKey];
             }
         }
 
         function getSavedLanguage() {
-            const savedLang = localStorage.getItem('selectedLanguage');
-            return (savedLang && ['kk', 'ru', 'en'].includes(savedLang)) ? savedLang : 'kk';
+            return localStorage.getItem('selectedLanguage');
         }
 
         function switchTab(tabName) {
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            
-            document.getElementById(tabName + '-tab').classList.add('active');
-            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                if(pane) pane.classList.remove('active');
+            });
+            const activePane = document.getElementById(tabName);
+            if(activePane) activePane.classList.add('active');
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                if(tab) tab.classList.remove('active');
+            });
+            const activeTab = document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`);
+            if(activeTab) activeTab.classList.add('active');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const savedLanguage = getSavedLanguage();
-            switchLanguage(savedLanguage);
-            switchTab('<?php echo $activeTab; ?>');
+            const savedLang = getSavedLanguage() || 'kk';
+            switchLanguage(savedLang);
 
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.error, .success');
-                alerts.forEach(alert => {
-                    if(alert) {
-                        alert.style.opacity = '0';
-                        alert.style.transition = 'opacity 0.5s';
-                        setTimeout(() => alert.remove(), 500);
-                    }
-                });
-            }, 5000);
+            const activeTabName = '<?php echo $activeTab; ?>';
+            if (activeTabName) {
+                switchTab(activeTabName);
+            }
+
+            // Auto-dismiss success message
+            const successMessage = document.querySelector('.success');
+            if (successMessage) {
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+            }
         });
     </script>
 </head>
 <body>
     <div class="auth-container">
         <div class="language-switcher">
-            <button data-lang-btn="kk" onclick="switchLanguage('kk')" class="active">🇰🇿 ҚАЗ</button>
-            <button data-lang-btn="ru" onclick="switchLanguage('ru')">🇷🇺 РУС</button>
-            <button data-lang-btn="en" onclick="switchLanguage('en')">🇬🇧 ENG</button>
+            <button onclick="switchLanguage('kk')" data-lang="kk">🇰🇿 ҚАЗ</button>
+            <button onclick="switchLanguage('ru')" data-lang="ru">🇷🇺 РУС</button>
+            <button onclick="switchLanguage('en')" data-lang="en">🇬🇧 ENG</button>
         </div>
 
         <div class="logo">
-            <h1>📚 QuizCard</h1>
+            <h1 data-translate-key="page_title_login">QuizCard</h1>
             <p data-translate-key="panel_title">Мұғалімдер үшін басқару панелі</p>
         </div>
 
         <div class="tabs">
-            <button class="tab" onclick="switchTab('login')" data-translate-key="login_tab">Кіру</button>
-            <button class="tab" onclick="switchTab('register')" data-translate-key="register_tab">Тіркелу</button>
+            <button class="tab <?php echo $activeTab === 'login' ? 'active' : ''; ?>" onclick="switchTab('login')" data-translate-key="login_tab">Кіру</button>
+            <button class="tab <?php echo $activeTab === 'register' ? 'active' : ''; ?>" onclick="switchTab('register')" data-translate-key="register_tab">Тіркелу</button>
         </div>
 
         <div class="tab-content">
             <?php if ($error_key): ?>
-                <div class="error"><?php echo $translations['ru'][$error_key]; ?></div>
+                <div class="error" data-translate-key="<?php echo $error_key; ?>">
+                    <?php echo isset($translations['kk'][$error_key]) ? $translations['kk'][$error_key] : 'Unknown error'; ?>
+                </div>
             <?php endif; ?>
-
             <?php if ($success_key): ?>
-                <div class="success"><?php echo $translations['ru'][$success_key]; ?></div>
+                <div class="success" data-translate-key="<?php echo $success_key; ?>">
+                    <?php echo isset($translations['kk'][$success_key]) ? $translations['kk'][$success_key] : 'Unknown success message'; ?>
+                </div>
             <?php endif; ?>
 
-            <!-- Login Tab -->
-            <div id="login-tab" class="tab-pane">
-                <form method="POST" action="">
-                    <input type="hidden" name="login" value="1">
+            <!-- Login Form -->
+            <div id="login" class="tab-pane <?php echo $activeTab === 'login' ? 'active' : ''; ?>">
+                <form action="login.php" method="post">
                     <div class="form-group">
-                        <label for="username" data-translate-key="username_label">Имя пользователя</label>
+                        <label for="username" data-translate-key="username_label">Пайдаланушы аты</label>
                         <input type="text" id="username" name="username" required>
                     </div>
                     <div class="form-group">
-                        <label for="password" data-translate-key="password_label">Пароль</label>
+                        <label for="password" data-translate-key="password_label">Құпия сөз</label>
                         <input type="password" id="password" name="password" required>
                     </div>
-                    <button type="submit" class="btn" data-translate-key="login_button">Войти</button>
+                    <button type="submit" name="login" class="btn" data-translate-key="login_button">Кіру</button>
                 </form>
+                <div class="student-link">
+                    <a href="student_login.php" data-translate-key="student_link">👨‍🎓 Оқушылар үшін кіру</a>
+                </div>
             </div>
 
-            <!-- Register Tab -->
-            <div id="register-tab" class="tab-pane">
-                <form method="POST" action="">
-                    <input type="hidden" name="register" value="1">
+            <!-- Register Form -->
+            <div id="register" class="tab-pane <?php echo $activeTab === 'register' ? 'active' : ''; ?>">
+                <form action="login.php" method="post">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="reg_first_name" data-translate-key="first_name_label">Имя</label>
+                            <label for="reg_first_name" data-translate-key="first_name_label">Аты</label>
                             <input type="text" id="reg_first_name" name="reg_first_name" required>
                         </div>
                         <div class="form-group">
-                            <label for="reg_last_name" data-translate-key="last_name_label">Фамилия</label>
+                            <label for="reg_last_name" data-translate-key="last_name_label">Тегі</label>
                             <input type="text" id="reg_last_name" name="reg_last_name" required>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="reg_username" data-translate-key="username_label">Имя пользователя</label>
-                        <input type="text" id="reg_username" name="reg_username" required>
                     </div>
                     <div class="form-group">
                         <label for="reg_email" data-translate-key="email_label">Email</label>
                         <input type="email" id="reg_email" name="reg_email" required>
                     </div>
                     <div class="form-group">
-                        <label for="reg_password" data-translate-key="password_label">Пароль</label>
+                        <label for="reg_username" data-translate-key="username_label">Пайдаланушы аты</label>
+                        <input type="text" id="reg_username" name="reg_username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg_password" data-translate-key="password_label">Құпия сөз</label>
                         <input type="password" id="reg_password" name="reg_password" required>
                     </div>
                     <div class="form-group">
-                        <label for="reg_confirm_password" data-translate-key="confirm_password_label">Подтвердите пароль</label>
+                        <label for="reg_confirm_password" data-translate-key="confirm_password_label">Құпия сөзді растау</label>
                         <input type="password" id="reg_confirm_password" name="reg_confirm_password" required>
                     </div>
-                    <button type="submit" class="btn" data-translate-key="register_button">Зарегистрироваться</button>
+                    <button type="submit" name="register" class="btn" data-translate-key="register_button">Тіркелу</button>
                 </form>
-            </div>
-
-            <div class="student-link">
-                <a href="student_login.php" data-translate-key="student_link">👨‍🎓 Вход для учеников</a>
             </div>
         </div>
     </div>

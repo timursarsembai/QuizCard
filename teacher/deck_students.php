@@ -3,6 +3,7 @@ session_start();
 require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -34,9 +35,9 @@ if (!$current_deck) {
 if ($_POST && isset($_POST['assign_student'])) {
     $student_id = $_POST['student_id'];
     if ($deck->assignDeckToStudent($deck_id, $student_id, $teacher_id)) {
-        $success = "Ученик успешно добавлен в колоду!";
+        $success = $translations['ru']['student_assigned_success'];
     } else {
-        $error = "Ошибка при добавлении ученика в колоду";
+        $error = $translations['ru']['student_assignment_error'];
     }
 }
 
@@ -44,9 +45,9 @@ if ($_POST && isset($_POST['assign_student'])) {
 if ($_GET && isset($_GET['unassign'])) {
     $student_id = $_GET['unassign'];
     if ($deck->unassignDeckFromStudent($deck_id, $student_id, $teacher_id)) {
-        $success = "Ученик исключен из колоды!";
+        $success = $translations['ru']['student_unassigned_success'];
     } else {
-        $error = "Ошибка при исключении ученика";
+        $error = $translations['ru']['student_unassignment_error'];
     }
 }
 
@@ -59,7 +60,7 @@ $available_students = $deck->getAvailableStudents($deck_id, $teacher_id);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Добавить учеников</title>
+    <title data-translate-key="deck_students_title">Добавить учеников</title>
     <style>
         * {
             margin: 0;
@@ -330,19 +331,21 @@ $available_students = $deck->getAvailableStudents($deck_id, $teacher_id);
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>👥 Добавить учеников</h1>
+                <h1 data-translate-key="deck_students_title">👥 Добавить учеников</h1>
                 <div class="breadcrumb">
-                    <a href="decks.php">Колоды</a> → Добавление учеников
+                    <a href="decks.php" data-translate-key="nav_decks">Колоды</a> → <span data-translate-key="deck_students_breadcrumb">Добавление учеников</span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="decks.php" class="btn">← Назад</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <a href="decks.php" class="btn" data-translate-key="back_button">← Назад</a>
+                <a href="../logout.php" class="btn" data-translate-key="logout_button">Выйти</a>
             </div>
         </div>
     </header>
 
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="deck-info" style="border-left-color: <?php echo htmlspecialchars($current_deck['color']); ?>">
             <h2><?php echo htmlspecialchars($current_deck['name']); ?></h2>
             <?php if ($current_deck['description']): ?>
@@ -360,12 +363,12 @@ $available_students = $deck->getAvailableStudents($deck_id, $teacher_id);
 
         <?php if (!empty($available_students)): ?>
             <div class="card">
-                <h2>Добавить ученика в колоду</h2>
+                <h2 data-translate-key="add_student_to_deck">Добавить ученика в колоду</h2>
                 <form method="POST" action="">
                     <div class="form-group">
-                        <label for="student_id">Выберите ученика:</label>
+                        <label for="student_id" data-translate-key="select_student">Выберите ученика:</label>
                         <select id="student_id" name="student_id" required>
-                            <option value="">-- Выберите ученика --</option>
+                            <option value="" data-translate-key="select_student_option">-- Выберите ученика --</option>
                             <?php foreach ($available_students as $student): ?>
                                 <option value="<?php echo $student['id']; ?>">
                                     <?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?> 
@@ -374,17 +377,17 @@ $available_students = $deck->getAvailableStudents($deck_id, $teacher_id);
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <button type="submit" name="assign_student" class="btn btn-primary">Добавить в колоду</button>
+                    <button type="submit" name="assign_student" class="btn btn-primary" data-translate-key="add_to_deck_button">Добавить в колоду</button>
                 </form>
             </div>
         <?php endif; ?>
 
         <div class="card">
-            <h2>Ученики в колоде</h2>
+            <h2 data-translate-key="students_in_deck">Ученики в колоде</h2>
             <?php if (empty($assigned_students)): ?>
                 <div class="empty-state">
-                    <h3>👥 Нет учеников в колоде</h3>
-                    <p>В эту колоду пока не добавлен ни один ученик.</p>
+                    <h3 data-translate-key="no_students_in_deck">👥 Нет учеников в колоде</h3>
+                    <p data-translate-key="no_students_in_deck_text">В эту колоду пока не добавлен ни один ученик.</p>
                 </div>
             <?php else: ?>
                 <div class="student-grid">
@@ -397,11 +400,13 @@ $available_students = $deck->getAvailableStudents($deck_id, $teacher_id);
                                 @<?php echo htmlspecialchars($student['username']); ?>
                             </div>
                             <div class="student-date">
-                                Назначено: <?php echo date('d.m.Y', strtotime($student['assigned_at'])); ?>
+                                <span data-translate-key="assigned_on">Назначено:</span> <?php echo date('d.m.Y', strtotime($student['assigned_at'])); ?>
                             </div>
                             <div class="actions" style="margin-top: 1rem;">
                                 <a href="?deck_id=<?php echo $deck_id; ?>&unassign=<?php echo $student['id']; ?>" 
                                    class="btn btn-danger" 
+                                   data-translate-key="cancel_assignment"
+                                   data-confirm-key="cancel_assignment_confirm"
                                    onclick="return confirm('Вы уверены, что хотите отменить назначение этой колоды?')">
                                    Отменить назначение
                                 </a>
@@ -415,8 +420,8 @@ $available_students = $deck->getAvailableStudents($deck_id, $teacher_id);
         <?php if (empty($available_students) && !empty($assigned_students)): ?>
             <div class="card">
                 <div class="empty-state">
-                    <h3>✅ Все ученики назначены</h3>
-                    <p>Колода назначена всем доступным ученикам.</p>
+                    <h3 data-translate-key="all_students_assigned">✅ Все ученики назначены</h3>
+                    <p data-translate-key="all_students_assigned_text">Колода назначена всем доступным ученикам.</p>
                 </div>
             </div>
         <?php endif; ?>

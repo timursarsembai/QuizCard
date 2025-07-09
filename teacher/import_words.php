@@ -9,13 +9,16 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
 
 // Проверяем подключение к БД
 if (!$db) {
-    $error = 'Ошибка подключения к базе данных: ' . $database->getError();
+    $lang = $_SESSION['language'] ?? 'ru';
+    $t = $translations[$lang] ?? $translations['ru'];
+    $error = $t['error_db_connection_import'] . ' ' . $database->getError();
 }
 
 $user = new User($db);
@@ -65,11 +68,17 @@ if ($_POST && isset($_FILES['import_file']) && $_FILES['import_file']['error'] =
     $deck_info = $deck->getDeckById($deck_id, $teacher_id);
     
     if (!$deck_info) {
-        $error = 'Выбранная колода не найдена или не принадлежит вам';
+        $lang = $_SESSION['language'] ?? 'ru';
+        $t = $translations[$lang] ?? $translations['ru'];
+        $error = $t['error_deck_not_found'] ?? 'Выбранная колода не найдена или не принадлежит вам';
     } elseif ($file['error'] !== UPLOAD_ERR_OK) {
-        $error = 'Ошибка при загрузке файла: ' . $file['error'];
+        $lang = $_SESSION['language'] ?? 'ru';
+        $t = $translations[$lang] ?? $translations['ru'];
+        $error = ($t['error_file_upload'] ?? 'Ошибка при загрузке файла') . ': ' . $file['error'];
     } elseif ($file['size'] > 10 * 1024 * 1024) { // 10 MB
-        $error = 'Файл слишком большой. Максимальный размер: 10 MB';
+        $lang = $_SESSION['language'] ?? 'ru';
+        $t = $translations[$lang] ?? $translations['ru'];
+        $error = ($t['file_too_large'] ?? 'Файл слишком большой') . '. ' . ($t['max_file_size'] ?? 'Максимальный размер') . ': 10 MB';
     } else {
         
         // Подсчитываем слова в колоде до импорта
@@ -98,9 +107,13 @@ if ($_POST && isset($_FILES['import_file']) && $_FILES['import_file']['error'] =
         if (isset($import_results['error'])) {
             $error = $import_results['error'];
         } else {
-            $success = "Импорт завершен! Обработано строк: " . count($import_results['details']) . 
-                      ", фактически добавлено в БД: {$actually_added} слов" .
-                      ", пропущено: {$import_results['skipped']}, ошибок: {$import_results['errors']}";
+            // Получаем переводы для текущего языка
+            $lang = $_SESSION['language'] ?? 'ru';
+            $t = $translations[$lang] ?? $translations['ru'];
+            
+            $success = $t['import_completed'] . " " . count($import_results['details']) . 
+                      ", " . $t['actually_added_db'] . " {$actually_added} " . $t['words_word'] .
+                      ", " . $t['skipped_word'] . " {$import_results['skipped']}, " . $t['errors_word'] . " {$import_results['errors']}";
             
             // Добавляем информацию о фактическом результате
             $import_results['actually_added'] = $actually_added;
@@ -112,7 +125,9 @@ if ($_POST && isset($_FILES['import_file']) && $_FILES['import_file']['error'] =
         }
     }
 } elseif ($_POST && isset($_POST['import_file']) && !$db) {
-    $error = 'Невозможно выполнить импорт: нет подключения к базе данных';
+    $lang = $_SESSION['language'] ?? 'ru';
+    $t = $translations[$lang] ?? $translations['ru'];
+    $error = $t['error_db_connection_import'] ?? 'Невозможно выполнить импорт: нет подключения к базе данных';
 }
 
 function processImportFile($file, $deck_id, $vocabulary, $db) {
@@ -440,7 +455,7 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Импорт слов - QuizCard</title>
+    <title data-translate-key="import_words_title">Импорт слов из файла</title>
     <style>
         * {
             margin: 0;
@@ -632,6 +647,40 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
             font-size: 0.9rem;
         }
 
+        /* Language Switcher */
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .language-switcher button {
+            background: none;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #667eea;
+        }
+        
+        .language-switcher button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .language-switcher button:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 1rem;
@@ -651,12 +700,14 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
 </head>
 <body>
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="header">
-            <h1>📤 Импорт слов из файла</h1>
+            <h1 data-translate-key="import_words_title">📤 Импорт слов из файла</h1>
             <?php if ($selected_deck): ?>
-                <p>Массовая загрузка в колоду "<?php echo htmlspecialchars($selected_deck['name']); ?>"</p>
+                <p data-translate-key="import_words_deck_description">Массовая загрузка в колоду "<?php echo htmlspecialchars($selected_deck['name']); ?>"</p>
             <?php else: ?>
-                <p>Массовая загрузка словаря из Excel или CSV файлов</p>
+                <p data-translate-key="import_words_description">Массовая загрузка словаря из Excel или CSV файлов</p>
             <?php endif; ?>
         </div>
 
@@ -666,23 +717,23 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
                     <?php echo htmlspecialchars($error); ?>
                     <?php if (strpos($error, 'подключения к базе данных') !== false): ?>
                         <br><br>
-                        <strong>💡 Совет:</strong> Проверьте настройки в config/database.php и убедитесь, что база данных создана.
+                        <strong>💡 <span data-translate-key="error_db_connection_tip">Совет:</span></strong> <span data-translate-key="error_db_connection_tip">Проверьте настройки в config/database.php и убедитесь, что база данных создана.</span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
 
             <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['import_file'])): ?>
                 <div class="info-box" style="background: #fff3cd; color: #856404; border-left: 4px solid #ffc107;">
-                    <h4>🔍 Отладочная информация</h4>
-                    <strong>Метод запроса:</strong> <?php echo $_SERVER['REQUEST_METHOD']; ?><br>
-                    <strong>POST данные:</strong> <?php echo !empty($_POST) ? 'Присутствуют' : 'Отсутствуют'; ?><br>
-                    <strong>FILES данные:</strong> <?php echo isset($_FILES['import_file']) ? 'Присутствуют' : 'Отсутствуют'; ?><br>
-                    <strong>Подключение к БД:</strong> <?php echo $db ? 'Есть' : 'Нет'; ?><br>
+                    <h4 data-translate-key="debug_info">🔍 Отладочная информация</h4>
+                    <strong data-translate-key="request_method">Метод запроса:</strong> <?php echo $_SERVER['REQUEST_METHOD']; ?><br>
+                    <strong data-translate-key="post_data">POST данные:</strong> <?php echo !empty($_POST) ? '<span data-translate-key="present">Присутствуют</span>' : '<span data-translate-key="absent">Отсутствуют</span>'; ?><br>
+                    <strong data-translate-key="files_data">FILES данные:</strong> <?php echo isset($_FILES['import_file']) ? '<span data-translate-key="present">Присутствуют</span>' : '<span data-translate-key="absent">Отсутствуют</span>'; ?><br>
+                    <strong data-translate-key="db_connection">Подключение к БД:</strong> <?php echo $db ? '<span data-translate-key="yes">Да</span>' : '<span data-translate-key="no">Нет</span>'; ?><br>
                     <?php if (isset($_FILES['import_file'])): ?>
-                        <strong>Файл:</strong> <?php echo htmlspecialchars($_FILES['import_file']['name']); ?><br>
-                        <strong>Размер:</strong> <?php echo $_FILES['import_file']['size']; ?> байт<br>
-                        <strong>Ошибка загрузки:</strong> <?php echo $_FILES['import_file']['error']; ?><br>
-                        <strong>Временный файл существует:</strong> <?php echo file_exists($_FILES['import_file']['tmp_name']) ? 'Да' : 'Нет'; ?><br>
+                        <strong data-translate-key="file_name">Файл:</strong> <?php echo htmlspecialchars($_FILES['import_file']['name']); ?><br>
+                        <strong data-translate-key="file_size">Размер:</strong> <?php echo $_FILES['import_file']['size']; ?> <span data-translate-key="bytes">байт</span><br>
+                        <strong data-translate-key="upload_error">Ошибка загрузки:</strong> <?php echo $_FILES['import_file']['error']; ?><br>
+                        <strong data-translate-key="temp_file_exists">Временный файл существует:</strong> <?php echo file_exists($_FILES['import_file']['tmp_name']) ? '<span data-translate-key="yes">Да</span>' : '<span data-translate-key="no">Нет</span>'; ?><br>
                     <?php endif; ?>
                     <strong>Deck ID:</strong> <?php echo $deck_id; ?><br>
                     <strong>Teacher ID:</strong> <?php echo $teacher_id; ?><br>
@@ -694,33 +745,33 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
                 
                 <?php if (!empty($import_results['details'])): ?>
                     <div class="import-results">
-                        <h4>Детали импорта:</h4>
+                        <h4 data-translate-key="import_details">Детали импорта:</h4>
                         <div class="result-stats">
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $import_results['actually_added'] ?? $import_results['added']; ?></div>
-                                <div class="stat-label">Фактически добавлено в БД</div>
+                                <div class="stat-label" data-translate-key="actually_added_db_stat">Фактически добавлено в БД</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $import_results['skipped']; ?></div>
-                                <div class="stat-label">Пропущено</div>
+                                <div class="stat-label" data-translate-key="skipped_stat">Пропущено</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $import_results['errors']; ?></div>
-                                <div class="stat-label">Ошибок</div>
+                                <div class="stat-label" data-translate-key="errors_stat">Ошибок</div>
                             </div>
                         </div>
                         
                         <?php if (isset($import_results['words_before'], $import_results['words_after'])): ?>
                             <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; margin: 1rem 0;">
-                                <strong>📊 Статистика БД:</strong><br>
-                                Слов в колоде было: <?php echo $import_results['words_before']; ?><br>
-                                Слов в колоде стало: <?php echo $import_results['words_after']; ?><br>
-                                Прирост: +<?php echo $import_results['actually_added']; ?>
+                                <strong data-translate-key="db_statistics">📊 Статистика БД:</strong><br>
+                                <span data-translate-key="words_before">Слов в колоде было:</span> <?php echo $import_results['words_before']; ?><br>
+                                <span data-translate-key="words_after">Слов в колоде стало:</span> <?php echo $import_results['words_after']; ?><br>
+                                <span data-translate-key="growth">Прирост:</span> +<?php echo $import_results['actually_added']; ?>
                             </div>
                         <?php endif; ?>
                         
                         <details>
-                            <summary>Подробный отчет</summary>
+                            <summary data-translate-key="detailed_report">Подробный отчет</summary>
                             <ul style="margin-top: 1rem;">
                                 <?php foreach ($import_results['details'] as $detail): ?>
                                     <li><?php echo htmlspecialchars($detail); ?></li>
@@ -736,7 +787,7 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
                     <!-- Колода уже выбрана из URL -->
                     <input type="hidden" name="deck_id" value="<?php echo $deck_id; ?>">
                     <div class="form-group">
-                        <label>Импорт в колоду:</label>
+                        <label data-translate-key="import_to_deck">Импорт в колоду:</label>
                         <div style="padding: 0.75rem; background: #e9ecef; border-radius: 8px; font-weight: 500;">
                             📚 <?php echo htmlspecialchars($selected_deck['name']); ?>
                             <?php if ($selected_deck['description']): ?>
@@ -747,9 +798,9 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
                 <?php else: ?>
                     <!-- Выбор колоды вручную -->
                     <div class="form-group">
-                        <label for="deck_id">Выберите колоду:</label>
+                        <label for="deck_id" data-translate-key="select_deck">Выберите колоду:</label>
                         <select id="deck_id" name="deck_id" required>
-                            <option value="">-- Выберите колоду --</option>
+                            <option value="" data-translate-key="select_deck_option">-- Выберите колоду --</option>
                             <?php foreach ($decks as $deck_item): ?>
                                 <option value="<?php echo $deck_item['id']; ?>">
                                     <?php echo htmlspecialchars($deck_item['name']); ?>
@@ -760,26 +811,26 @@ function logImportActivity($teacher_id, $deck_id, $file_name, $results) {
                 <?php endif; ?>
 
                 <div class="form-group">
-                    <label for="import_file">Выберите файл для импорта:</label>
+                    <label for="import_file" data-translate-key="select_file_label">Выберите файл для импорта:</label>
                     <input type="file" id="import_file" name="import_file" 
                            accept=".csv,.xls,.xlsx" required>
                 </div>
 
-                <button type="submit" name="import_file" class="btn btn-primary">
+                <button type="submit" name="import_file" class="btn btn-primary" data-translate-key="import_words_button">
                     📤 Импортировать слова
                 </button>
             </form>
 
             <div class="info-box">
-                <h3>📋 Формат файла</h3>
-                <p>Файл должен содержать следующие колонки:</p>
+                <h3 data-translate-key="import_format_title">📋 Формат файла</h3>
+                <p data-translate-key="import_format_description">Файл должен содержать следующие колонки:</p>
                 <ul>
-                    <li><strong>foreign_word</strong> (или word) - иностранное слово</li>
-                    <li><strong>translation</strong> (или translate) - перевод</li>
-                    <li><strong>image</strong> (или images) - URL изображения (опционально)</li>
+                    <li><strong data-translate-key="foreign_word_column">foreign_word</strong> (или word) - иностранное слово</li>
+                    <li><strong data-translate-key="translation_column">translation</strong> (или translate) - перевод</li>
+                    <li><strong data-translate-key="image_column">image</strong> (или images) - URL изображения (опционально)</li>
                 </ul>
                 
-                <h4>Пример CSV файла:</h4>
+                <h4 data-translate-key="csv_example_title">Пример CSV файла:</h4>
                 <div class="format-example">
 foreign_word,translation,image<br>
 apple,яблоко,https://example.com/apple.jpg<br>
@@ -787,36 +838,32 @@ house,дом,https://example.com/house.png<br>
 car,машина,
                 </div>
 
-                <h4>Поддержка изображений:</h4>
+                <h4 data-translate-key="image_support_title">Поддержка изображений:</h4>
                 <ul>
-                    <li>URL ссылки на изображения (автоматическая загрузка)</li>
-                    <li>Поддерживаемые форматы: JPG, PNG, GIF, WebP</li>
+                    <li data-translate-key="image_support_urls">URL ссылки на изображения (автоматическая загрузка)</li>
+                    <li data-translate-key="image_supported_formats">Поддерживаемые форматы: JPG, PNG, GIF, WebP</li>
                 </ul>
-
-                <div style="background: #d1ecf1; color: #0c5460; padding: 1rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid #17a2b8;">
-                    <h4>💡 Для классического веб-хостинга</h4>
-                    <p><strong>CSV файлы:</strong> Полная поддержка с изображениями по URL</p>
-                    <p><strong>Excel (.xlsx):</strong> Базовая поддержка текстовых данных</p>
-                    <p><strong>Excel (.xls):</strong> Не поддерживается, используйте .xlsx или .csv</p>
-                    <p><em>Встроенные изображения в Excel не поддерживаются без Composer</em></p>
-                </div>
             </div>
 
             <div class="actions">
                 <?php if ($selected_deck): ?>
-                    <a href="vocabulary.php?deck_id=<?php echo $deck_id; ?>" class="btn btn-secondary">← Назад к колоде "<?php echo htmlspecialchars($selected_deck['name']); ?>"</a>
+                    <a href="vocabulary.php?deck_id=<?php echo $deck_id; ?>" class="btn btn-secondary" data-translate-key="back_to_deck">← Назад к колоде "<?php echo htmlspecialchars($selected_deck['name']); ?>"</a>
                 <?php else: ?>
-                    <a href="decks.php" class="btn btn-secondary">← Назад к колодам</a>
+                    <a href="decks.php" class="btn btn-secondary" data-translate-key="back_to_decks">← Назад к колодам</a>
                 <?php endif; ?>
                 <div>
-                    <a href="sample_import.csv" class="btn btn-secondary" download>📥 Скачать пример CSV</a>
-                    <a href="sample_import.xlsx" class="btn btn-secondary" download>📥 Скачать Excel (.xlsx)</a>
+                    <a href="sample_import.csv" class="btn btn-secondary" download data-translate-key="download_csv_sample">📥 Скачать пример CSV</a>
+                    <a href="sample_import.xlsx" class="btn btn-secondary" download data-translate-key="download_excel_sample">📥 Скачать Excel (.xlsx)</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Переводы для JavaScript
+        const translations = <?php echo json_encode($translations); ?>;
+        let currentLang = localStorage.getItem('selectedLanguage') || 'ru';
+        
         // Индикатор прогресса для загрузки файлов
         document.getElementById('import_file').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -825,7 +872,9 @@ car,машина,
                 const maxSize = 10; // 10 MB
                 
                 if (file.size > maxSize * 1024 * 1024) {
-                    alert(`Файл слишком большой (${fileSize} MB). Максимальный размер: ${maxSize} MB`);
+                    const fileTooLarge = translations[currentLang]['file_too_large'] || 'Файл слишком большой';
+                    const maxFileSize = translations[currentLang]['max_file_size'] || 'Максимальный размер:';
+                    alert(`${fileTooLarge} (${fileSize} MB). ${maxFileSize} ${maxSize} MB`);
                     e.target.value = '';
                     return;
                 }
@@ -838,15 +887,18 @@ car,машина,
             const file = document.getElementById('import_file').files[0];
             
             if (file) {
-                submitBtn.innerHTML = '⏳ Импортируем...';
+                const importingProgress = translations[currentLang]['importing_progress'] || 'Импортируем...';
+                submitBtn.innerHTML = `⏳ ${importingProgress}`;
                 submitBtn.disabled = true;
                 
                 // Создаем индикатор прогресса
                 const progressContainer = document.createElement('div');
+                const processingFile = translations[currentLang]['processing_file'] || 'Обрабатываем файл:';
+                const pleaseWait = translations[currentLang]['please_wait'] || 'Пожалуйста, подождите...';
                 progressContainer.innerHTML = `
                     <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                        <div>📤 Обрабатываем файл: ${file.name}</div>
-                        <div style="margin-top: 0.5rem; color: #666;">Пожалуйста, подождите...</div>
+                        <div>📤 ${processingFile} ${file.name}</div>
+                        <div style="margin-top: 0.5rem; color: #666;">${pleaseWait}</div>
                     </div>
                 `;
                 submitBtn.parentNode.appendChild(progressContainer);

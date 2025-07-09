@@ -8,6 +8,7 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/translations.php';
 
 try {
     $database = new Database();
@@ -116,52 +117,57 @@ require_once 'header.php';
         color: #888;
         margin-left: 1rem;
     }
+
 </style>
 
 <div class="container">
+    <?php include 'language_switcher.php'; ?>
+
     <div class="stats-grid">
         <div class="stat-card">
             <i class="fas fa-layer-group stat-icon"></i>
             <div class="stat-info">
                 <div class="stat-number"><?php echo $total_decks; ?></div>
-                <div class="stat-label">Колод</div>
+                <div class="stat-label" data-translate-key="decks">Колод</div>
             </div>
         </div>
         <div class="stat-card">
             <i class="fas fa-file-alt stat-icon"></i>
             <div class="stat-info">
                 <div class="stat-number"><?php echo $total_tests; ?></div>
-                <div class="stat-label">Тестов</div>
+                <div class="stat-label" data-translate-key="tests">Тестов</div>
             </div>
         </div>
         <div class="stat-card">
             <i class="fas fa-user-graduate stat-icon"></i>
             <div class="stat-info">
                 <div class="stat-number"><?php echo $total_students; ?></div>
-                <div class="stat-label">Учеников</div>
+                <div class="stat-label" data-translate-key="students">Учеников</div>
             </div>
         </div>
         <div class="stat-card">
             <i class="fas fa-spell-check stat-icon"></i>
             <div class="stat-info">
                 <div class="stat-number"><?php echo $total_words; ?></div>
-                <div class="stat-label">Слов</div>
+                <div class="stat-label" data-translate-key="words">Слов</div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h2><i class="fas fa-history"></i> Последние действия учеников</h2>
+        <h2 data-translate-key="recent_student_activity"><i class="fas fa-history"></i> Последние действия учеников</h2>
         <?php if (!empty($recent_activities)): ?>
             <ul class="activity-list">
                 <?php foreach ($recent_activities as $activity): ?>
                     <li class="activity-item">
                         <div>
                             <span class="student-info"><?php echo htmlspecialchars($activity['student_name']); ?></span>
-                            <span class="test-info">прошел(а) тест "<?php echo htmlspecialchars($activity['test_name']); ?>"</span>
+                            <span class="test-info">
+                                <span data-translate-key="activity_took_test">прошел(а) тест</span> "<?php echo htmlspecialchars($activity['test_name']); ?>"
+                            </span>
                         </div>
                         <div>
-                            <span class="score">Результат: <?php echo round($activity['score'], 1); ?>%</span>
+                            <span class="score"><span data-translate-key="score">Результат</span>: <?php echo round($activity['score'], 1); ?>%</span>
                             <span class="timestamp"><?php echo date('d.m.Y H:i', strtotime($activity['completed_at'])); ?></span>
                         </div>
                     </li>
@@ -169,11 +175,10 @@ require_once 'header.php';
             </ul>
         <?php else: ?>
             <div class="empty-state">
-                <p>Пока нет никаких действий от учеников.</p>
+                <p data-translate-key="no_student_activity">Пока нет никаких действий от учеников.</p>
             </div>
         <?php endif; ?>
     </div>
 </div>
-
 </body>
 </html>

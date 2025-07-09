@@ -7,6 +7,7 @@ session_start();
 require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
+require_once '../includes/translations.php';
 
 try {
     $database = new Database();
@@ -37,9 +38,9 @@ if ($_POST && isset($_POST['create_deck'])) {
     $daily_word_limit = intval($_POST['daily_word_limit']) ?: 20;
     
     if ($deck->createDeck($teacher_id, $name, $description, $color, $daily_word_limit)) {
-        $success = "Колода успешно создана!";
+        $success = "deck_created_success";
     } else {
-        $error = "Ошибка при создании колоды";
+        $error = "deck_create_error";
     }
 }
 
@@ -47,9 +48,9 @@ if ($_POST && isset($_POST['create_deck'])) {
 if ($_GET && isset($_GET['delete_deck'])) {
     $deck_id = $_GET['delete_deck'];
     if ($deck->deleteDeck($deck_id, $teacher_id)) {
-        $success = "Колода успешно удалена!";
+        $success = "deck_deleted_success";
     } else {
-        $error = "Ошибка при удалении колоды";
+        $error = "deck_delete_error";
     }
 }
 
@@ -215,24 +216,26 @@ include 'header.php';
 </style>
 
 <div class="container">
+    <?php include 'language_switcher.php'; ?>
+
     <?php if (isset($success)): ?>
-        <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+        <div class="alert alert-success" data-translate-key="<?php echo $success; ?>">Колода успешно создана!</div>
     <?php endif; ?>
 
     <?php if (isset($error)): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+        <div class="alert alert-danger" data-translate-key="<?php echo $error; ?>">Ошибка при создании колоды</div>
     <?php endif; ?>
 
     <div class="card">
-        <h2>Создать новую колоду</h2>
+        <h2 data-translate-key="create_new_deck">Создать новую колоду</h2>
         <form method="POST" action="">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="name">Название колоды:</label>
+                    <label for="name" data-translate-key="deck_name">Название колоды:</label>
                     <input type="text" id="name" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="color">Цвет колоды:</label>
+                    <label for="color" data-translate-key="deck_color">Цвет колоды:</label>
                     <div style="display: flex; align-items: center;">
                         <input type="color" id="color" name="color" value="#667eea" 
                                onchange="updateColorPreview(this.value)">
@@ -240,28 +243,28 @@ include 'header.php';
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="daily_word_limit">Дневной лимит новых слов:</label>
+                    <label for="daily_word_limit" data-translate-key="daily_word_limit">Дневной лимит новых слов:</label>
                     <input type="number" id="daily_word_limit" name="daily_word_limit" value="20" min="1" max="100" 
                            title="Максимальное количество новых слов, которые студент может изучить за день">
-                    <small style="color: #666; display: block; margin-top: 5px;">
+                    <small style="color: #666; display: block; margin-top: 5px;" data-translate-key="daily_word_limit_help">
                         Ограничивает количество новых слов в день (повторения не ограничиваются)
                     </small>
                 </div>
             </div>
             <div class="form-group">
-                <label for="description">Описание (опционально):</label>
-                <textarea id="description" name="description" placeholder="Краткое описание темы колоды..."></textarea>
+                <label for="description" data-translate-key="deck_description">Описание (опционально):</label>
+                <textarea id="description" name="description" data-translate-key="deck_description_placeholder" placeholder="Краткое описание темы колоды..."></textarea>
             </div>
-            <button type="submit" name="create_deck" class="btn btn-primary">Создать колоду</button>
+            <button type="submit" name="create_deck" class="btn btn-primary" data-translate-key="create_deck_button">Создать колоду</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>Мои колоды</h2>
+        <h2 data-translate-key="my_decks">Мои колоды</h2>
         <?php if (empty($decks)): ?>
             <div class="empty-state">
-                <h3>📝 Колоды не созданы</h3>
-                <p>Создайте первую колоду для организации словарей по темам.</p>
+                <h3 data-translate-key="empty_deck_title">📝 Колоды не созданы</h3>
+                <p data-translate-key="empty_deck_text">Создайте первую колоду для организации словарей по темам.</p>
             </div>
         <?php else: ?>
             <div class="decks-grid">
@@ -277,32 +280,34 @@ include 'header.php';
                         <div class="deck-stats">
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $deck_item['word_count'] ?: 0; ?></div>
-                                <div class="stat-label">Слов</div>
+                                <div class="stat-label" data-translate-key="words_stat">Слов</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $deck_item['assigned_students'] ?: 0; ?></div>
-                                <div class="stat-label">Учеников</div>
+                                <div class="stat-label" data-translate-key="students_stat">Учеников</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $deck_item['daily_word_limit'] ?: 20; ?></div>
-                                <div class="stat-label">Слов/день</div>
+                                <div class="stat-label" data-translate-key="words_per_day">Слов/день</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo date('d.m', strtotime($deck_item['created_at'])); ?></div>
-                                <div class="stat-label">Создано</div>
+                                <div class="stat-label" data-translate-key="created_stat">Создано</div>
                             </div>
                         </div>
                         
                         <div class="deck-actions">
                             <a href="vocabulary.php?deck_id=<?php echo $deck_item['id']; ?>" 
-                               class="btn btn-primary" title="Управление словами">✏️</a>
+                               class="btn btn-primary" data-translate-key="manage_words" title="Управление словами">✏️</a>
                             <a href="import_words.php?deck_id=<?php echo $deck_item['id']; ?>" 
-                               class="btn btn-info" title="Импорт из файла">📤</a>
+                               class="btn btn-info" data-translate-key="import_from_file" title="Импорт из файла">📤</a>
                             <a href="deck_students.php?deck_id=<?php echo $deck_item['id']; ?>" 
-                               class="btn" title="Управление учениками">👥</a>
+                               class="btn" data-translate-key="manage_students" title="Управление учениками">👥</a>
                             <a href="?delete_deck=<?php echo $deck_item['id']; ?>" 
                                class="btn btn-danger" 
                                onclick="return confirm('Вы уверены, что хотите удалить эту колоду?')"
+                               data-translate-key="delete_deck" 
+                               data-confirm-key="delete_deck_confirm"
                                title="Удалить колоду">🗑️</a>
                         </div>
                     </div>

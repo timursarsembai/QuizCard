@@ -13,6 +13,7 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/translations.php';
 
 try {
     $database = new Database();
@@ -107,6 +108,10 @@ $page_icon = "fas fa-file-alt";
 require_once 'header.php';
 ?>
 <style>
+    a.btn.btn-success {
+        background-color: purple;
+    }
+    
     .btn-primary {
         background: #28a745;
         color: white;
@@ -379,6 +384,7 @@ require_once 'header.php';
 </style>
 
 <div class="container">
+    <?php include 'language_switcher.php'; ?>
     
     <?php if (isset($success)): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
@@ -391,55 +397,55 @@ require_once 'header.php';
     <div class="stats">
         <div class="stat-card">
             <div class="stat-number"><?php echo count($decks); ?></div>
-            <div class="stat-label">Всего колод</div>
+            <div class="stat-label" data-translate-key="total_decks">Всего колод</div>
         </div>
         <div class="stat-card">
             <div class="stat-number"><?php echo $total_tests; ?></div>
-            <div class="stat-label">Всего тестов</div>
+            <div class="stat-label" data-translate-key="total_tests">Всего тестов</div>
         </div>
         <div class="stat-card">
             <div class="stat-number"><?php echo $total_attempts; ?></div>
-            <div class="stat-label">Всего попыток</div>
+            <div class="stat-label" data-translate-key="total_attempts">Всего попыток</div>
         </div>
     </div>
 
     <div class="card">
-        <h2>📝 Создать новый тест</h2>
+        <h2 data-translate-key="create_new_test">📝 Создать новый тест</h2>
         <form method="POST" action="">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="deck_id">Выберите колоду:</label>
+                    <label for="deck_id" data-translate-key="select_deck">Выберите колоду:</label>
                     <select name="deck_id" id="deck_id" required>
-                        <option value="">-- Выберите колоду --</option>
+                        <option value="" data-translate-key="select_deck_option">-- Выберите колоду --</option>
                         <?php foreach ($decks as $deck_item): ?>
-                            <option value="<?php echo $deck_item['id']; ?>">
+                            <option value="<?php echo $deck_item['id']; ?>" data-words-count="<?php echo $deck_item['word_count']; ?>">
                                 <?php echo htmlspecialchars($deck_item['name']); ?> 
-                                (<?php echo $deck_item['word_count']; ?> слов)
+                                (<span class="words-count"><?php echo $deck_item['word_count']; ?></span> <span data-translate-key="words_plural">слов</span>)
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="test_name">Название теста:</label>
-                    <input type="text" name="test_name" id="test_name" placeholder="Введите название теста" required>
+                    <label for="test_name" data-translate-key="test_name">Название теста:</label>
+                    <input type="text" name="test_name" id="test_name" data-translate-key="test_name_placeholder" placeholder="Введите название теста" required>
                 </div>
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="questions_count">Количество вопросов:</label>
+                    <label for="questions_count" data-translate-key="questions_count">Количество вопросов:</label>
                     <input type="number" name="questions_count" id="questions_count" min="1" max="50" value="10" required>
                 </div>
                 <div class="form-group">
-                    <label for="time_limit">Ограничение времени (минуты):</label>
-                    <input type="number" name="time_limit" id="time_limit" min="1" max="60" placeholder="Оставьте пустым для неограниченного времени">
+                    <label for="time_limit" data-translate-key="time_limit">Ограничение времени (минуты):</label>
+                    <input type="number" name="time_limit" id="time_limit" min="1" max="60" data-translate-key="time_limit_placeholder" placeholder="Оставьте пустым для неограниченного времени">
                 </div>
             </div>
-            <button type="submit" name="create_test" class="btn btn-primary">✨ Создать тест</button>
+            <button type="submit" name="create_test" class="btn btn-primary" data-translate-key="create_test_button">✨ Создать тест</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>📚 Тесты по колодам</h2>
+        <h2 data-translate-key="tests_by_decks">📚 Тесты по колодам</h2>
         
         <?php if (!empty($decks)): ?>
             <div class="deck-grid">
@@ -457,26 +463,30 @@ require_once 'header.php';
                             <div class="deck-stats">
                                 <div class="stat">
                                     <div class="stat-value"><?php echo $deck_item['word_count']; ?></div>
-                                    <div class="stat-text">Слов в колоде</div>
+                                    <div class="stat-text" data-translate-key="words_in_deck">Слов в колоде</div>
                                 </div>
                                 <div class="stat">
                                     <div class="stat-value"><?php echo $deck_item['tests_count']; ?></div>
-                                    <div class="stat-text">Тестов создано</div>
+                                    <div class="stat-text" data-translate-key="tests_created">Тестов создано</div>
                                 </div>
                             </div>
                             <div class="deck-actions">
                                 <a href="test_manager.php?deck_id=<?php echo $deck_item['id']; ?>" 
-                                   class="btn btn-primary" title="Управление тестами">
-                                    🧪 Тесты (<?php echo $deck_item['tests_count']; ?>)
+                                   class="btn btn-primary" 
+                                   title="Управление тестами">
+                                    🧪 <span data-translate-key="tests_button">Тесты</span> (<?php echo $deck_item['tests_count']; ?>)
                                 </a>
                                 <?php if ($deck_item['word_count'] > 0): ?>
                                     <a href="test_manager.php?deck_id=<?php echo $deck_item['id']; ?>&create=1" 
-                                       class="btn btn-success" title="Создать тест">
-                                        ➕ Создать тест
+                                       class="btn btn-success" 
+                                       title="Создать тест">
+                                        ➕ <span data-translate-key="create_test_button">Создать тест</span>
                                     </a>
                                 <?php else: ?>
-                                    <span class="btn btn-secondary" style="opacity: 0.6;" title="Добавьте слова в колоду">
-                                        ➕ Создать тест
+                                    <span class="btn btn-secondary" 
+                                          style="opacity: 0.6;" 
+                                          title="Добавьте слова в колоду">
+                                        ➕ <span data-translate-key="create_test_button">Создать тест</span>
                                     </span>
                                 <?php endif; ?>
                             </div>
@@ -486,9 +496,9 @@ require_once 'header.php';
             </div>
         <?php else: ?>
             <div class="empty-state">
-                <h3>📚 Нет колод</h3>
-                <p>Создайте колоды и добавьте в них слова, чтобы создавать тесты.</p>
-                <a href="decks.php" class="btn btn-primary" style="margin-top: 1rem;">
+                <h3 data-translate-key="no_decks_title">📚 Нет колод</h3>
+                <p data-translate-key="no_decks_text">Создайте колоды и добавьте в них слова, чтобы создавать тесты.</p>
+                <a href="decks.php" class="btn btn-primary" style="margin-top: 1rem;" data-translate-key="go_to_decks">
                     📚 Перейти к колодам
                 </a>
             </div>
@@ -497,7 +507,7 @@ require_once 'header.php';
 
     <!-- Раздел всех тестов -->
     <div class="card">
-        <h2>📋 Все тесты</h2>
+        <h2 data-translate-key="all_tests">📋 Все тесты</h2>
         <?php if (!empty($all_tests)): ?>
             <div class="tests-grid">
                 <?php foreach ($all_tests as $test_item): ?>
@@ -512,41 +522,48 @@ require_once 'header.php';
                         <div class="test-stats">
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $test_item['questions_count']; ?></div>
-                                <div class="stat-label">Вопросов</div>
+                                <div class="stat-label" data-translate-key="questions">Вопросов</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo isset($test_item['attempts_count']) ? $test_item['attempts_count'] : 0; ?></div>
-                                <div class="stat-label">Попыток</div>
+                                <div class="stat-label" data-translate-key="attempts">Попыток</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo isset($test_item['unique_students']) ? $test_item['unique_students'] : 0; ?></div>
-                                <div class="stat-label">Учеников</div>
+                                <div class="stat-label" data-translate-key="students">Учеников</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number">
                                     <?php echo (isset($test_item['avg_score']) && $test_item['avg_score']) ? round($test_item['avg_score'], 1) . '%' : '—'; ?>
                                 </div>
-                                <div class="stat-label">Ср. балл</div>
+                                <div class="stat-label" data-translate-key="avg_score">Ср. балл</div>
                             </div>
                         </div>
 
                         <div style="margin: 1rem 0; padding: 0.5rem; background: #e9ecef; border-radius: 5px; font-size: 0.9rem;">
-                            <div><strong>Время:</strong> 
-                                <?php echo $test_item['time_limit'] ? $test_item['time_limit'] . ' минут' : 'Без ограничения'; ?>
+                            <div><strong data-translate-key="time_label">Время:</strong> 
+                                <?php echo $test_item['time_limit'] ? $test_item['time_limit'] . ' <span data-translate-key="time_limit_minutes">минут</span>' : '<span data-translate-key="no_time_limit">Без ограничения</span>'; ?>
                             </div>
-                            <div><strong>Создан:</strong> 
+                            <div><strong data-translate-key="created_label">Создан:</strong> 
                                 <?php echo date('d.m.Y H:i', strtotime($test_item['created_at'])); ?>
                             </div>
                         </div>
                         
                         <div class="test-actions">
-                            <a href="test_edit.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-primary">✏️ Редактировать</a>
-                            <a href="test_preview.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-info">👁️ Предпросмотр</a>
-                            <a href="test_results.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-success">📊 Результаты</a>
+                            <a href="test_edit.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-primary">
+                                ✏️ <span data-translate-key="edit_test">Редактировать</span>
+                            </a>
+                            <a href="test_preview.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-info">
+                                👁️ <span data-translate-key="preview_test">Предпросмотр</span>
+                            </a>
+                            <a href="test_results.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-success">
+                                📊 <span data-translate-key="test_results">Результаты</span>
+                            </a>
                             <a href="?delete_test=<?php echo $test_item['id']; ?>" 
                                class="btn btn-danger" 
-                               onclick="return confirm('Вы уверены, что хотите удалить этот тест? Это действие нельзя отменить.')">
-                               🗑️ Удалить
+                               onclick="return confirm('Вы уверены, что хотите удалить этот тест? Это действие нельзя отменить.')"
+                               data-confirm-key="delete_test_confirm">
+                               🗑️ <span data-translate-key="delete_test">Удалить</span>
                             </a>
                         </div>
                     </div>
@@ -554,8 +571,8 @@ require_once 'header.php';
             </div>
         <?php else: ?>
             <div class="empty-state">
-                <h3>🎯 Нет тестов</h3>
-                <p>Создайте первый тест, используя форму выше</p>
+                <h3 data-translate-key="no_tests_title">🎯 Нет тестов</h3>
+                <p data-translate-key="no_tests_text">Создайте первый тест, используя форму выше</p>
             </div>
         <?php endif; ?>
     </div>
