@@ -3,12 +3,39 @@ config/database_local.php
 
 # Log files
 logs/
+*.log
 
 # User uploads
 uploads/
+# Keep folder structure but ignore content
+!uploads/.gitkeep
 
 # Vendor directory for dependencies
 vendor/
 
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+
 # macOS system files
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Cache and session files
+cache/
+sessions/
+tmp/
