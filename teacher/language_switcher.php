@@ -40,7 +40,7 @@
 
 <script>
     const translations = <?php echo json_encode($translations); ?>;
-    let currentLang = getSavedLanguage() || 'ru';
+    let currentLang = '<?php echo getCurrentLanguage(); ?>'; // Получаем язык из PHP сессии
 
     function getSavedLanguage() {
         return localStorage.getItem('selectedLanguage');
@@ -50,11 +50,41 @@
         localStorage.setItem('selectedLanguage', lang);
     }
 
+    function syncLanguageWithServer(lang) {
+        return fetch('../includes/set_language.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ language: lang })
+        })
+        .then(response => response.json())
+        .catch(error => {
+            console.error('Error syncing language with server:', error);
+            return { success: false };
+        });
+    }
+
     function switchLanguage(lang) {
+        if (lang === currentLang) return;
+        
         currentLang = lang;
+        
+        // Сохраняем в localStorage
         saveLanguage(lang);
-        translatePage();
-        updateLanguageSwitcher();
+        
+        // Синхронизируем с сервером
+        syncLanguageWithServer(lang).then(result => {
+            if (result.success) {
+                translatePage();
+                updateLanguageSwitcher();
+            } else {
+                console.error('Failed to sync language with server');
+                // Откатываем изменения при ошибке
+                currentLang = '<?php echo getCurrentLanguage(); ?>';
+                updateLanguageSwitcher();
+            }
+        });
     }
 
     function translatePage() {
@@ -146,7 +176,34 @@
         });
     }
 
+    // Инициализация при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
-        switchLanguage(currentLang);
+        // Синхронизируем localStorage с сессией сервера при загрузке
+        const savedLang = getSavedLanguage();
+        const serverLang = '<?php echo getCurrentLanguage(); ?>';
+        
+        // Если в localStorage есть язык, отличный от серверного, синхронизируем
+        if (savedLang && savedLang !== serverLang && ['kk', 'ru', 'en'].includes(savedLang)) {
+            syncLanguageWithServer(savedLang).then(result => {
+                if (result.success) {
+                    currentLang = savedLang;
+                    // Перезагружаем страницу для применения нового языка
+                    window.location.reload();
+                } else {
+                    // Если синхронизация не удалась, используем серверный язык
+                    saveLanguage(serverLang);
+                    currentLang = serverLang;
+                    updateLanguageSwitcher();
+                    translatePage();
+                }
+            });
+        } else {
+            // Сохраняем серверный язык в localStorage, если его там нет
+            if (!savedLang || savedLang !== serverLang) {
+                saveLanguage(serverLang);
+            }
+            updateLanguageSwitcher();
+            translatePage();
+        }
     });
 </script>

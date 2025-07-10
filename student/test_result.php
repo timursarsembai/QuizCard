@@ -3,6 +3,8 @@ session_start();
 require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Test.php';
+require_once '../includes/init_language.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -56,21 +58,21 @@ $answers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Определяем цвет и текст для оценки
 function getScoreClass($score) {
-    if ($score >= 90) return ['class' => 'excellent', 'text' => 'Отлично!'];
-    if ($score >= 75) return ['class' => 'good', 'text' => 'Хорошо!'];
-    if ($score >= 60) return ['class' => 'average', 'text' => 'Удовлетворительно'];
-    return ['class' => 'poor', 'text' => 'Нужно подучить'];
+    if ($score >= 90) return ['class' => 'excellent', 'text' => translate('test_result_excellent')];
+    if ($score >= 75) return ['class' => 'good', 'text' => translate('test_result_good')];
+    if ($score >= 60) return ['class' => 'average', 'text' => translate('test_result_average')];
+    return ['class' => 'poor', 'text' => translate('test_result_poor')];
 }
 
 $score_info = getScoreClass($attempt['score']);
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Результат теста</title>
+    <title>QuizCard - <?php echo translate('test_result_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -451,16 +453,17 @@ $score_info = getScoreClass($attempt['score']);
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>📊 Результат теста</h1>
+                <h1 data-translate-key="test_result_title">📊 <?php echo translate('test_result_title'); ?></h1>
                 <div class="breadcrumb">
-                    <a href="dashboard.php">Главная</a> → 
-                    <a href="tests.php">Тесты</a> → 
-                    Результат
+                    <a href="dashboard.php" data-translate-key="test_result_breadcrumb_home"><?php echo translate('test_result_breadcrumb_home'); ?></a> → 
+                    <a href="tests.php" data-translate-key="test_result_breadcrumb_tests"><?php echo translate('test_result_breadcrumb_tests'); ?></a> → 
+                    <span data-translate-key="test_result_breadcrumb_result"><?php echo translate('test_result_breadcrumb_result'); ?></span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="tests.php" class="btn">← К тестам</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <?php include 'language_switcher.php'; ?>
+                <a href="tests.php" class="btn" data-translate-key="test_result_to_tests"><?php echo translate('test_result_to_tests'); ?></a>
+                <a href="../logout.php" class="btn" data-translate-key="logout_button"><?php echo translate('logout_button'); ?></a>
             </div>
         </div>
     </header>
@@ -468,13 +471,15 @@ $score_info = getScoreClass($attempt['score']);
     <div class="container">
         <div class="result-header">
             <div class="test-title"><?php echo htmlspecialchars($attempt['test_name']); ?></div>
-            <div class="deck-name">Колода: <?php echo htmlspecialchars($attempt['deck_name']); ?></div>
+            <div class="deck-name" data-translate-key="test_result_deck_label"><?php echo translate('test_result_deck_label'); ?> <?php echo htmlspecialchars($attempt['deck_name']); ?></div>
             
             <div class="score-display">
                 <div class="score-circle score-<?php echo $score_info['class']; ?>">
                     <?php echo round($attempt['score']); ?>%
                 </div>
-                <div class="score-text score-<?php echo $score_info['class']; ?>">
+                <div class="score-text score-<?php echo $score_info['class']; ?>" 
+                     data-translate-key="test_result_<?php echo $score_info['class']; ?>" 
+                     data-score-class="<?php echo $score_info['class']; ?>">
                     <?php echo $score_info['text']; ?>
                 </div>
             </div>
@@ -482,20 +487,20 @@ $score_info = getScoreClass($attempt['score']);
             <div class="test-info">
                 <div class="info-item">
                     <div class="info-number"><?php echo $attempt['correct_answers']; ?></div>
-                    <div class="info-label">Правильных ответов</div>
+                    <div class="info-label" data-translate-key="test_result_correct_answers"><?php echo translate('test_result_correct_answers'); ?></div>
                 </div>
                 <div class="info-item">
                     <div class="info-number"><?php echo $attempt['total_questions'] - $attempt['correct_answers']; ?></div>
-                    <div class="info-label">Ошибок</div>
+                    <div class="info-label" data-translate-key="test_result_errors"><?php echo translate('test_result_errors'); ?></div>
                 </div>
                 <div class="info-item">
                     <div class="info-number"><?php echo $attempt['total_questions']; ?></div>
-                    <div class="info-label">Всего вопросов</div>
+                    <div class="info-label" data-translate-key="test_result_total_questions"><?php echo translate('test_result_total_questions'); ?></div>
                 </div>
                 <?php if ($attempt['time_spent']): ?>
                     <div class="info-item">
                         <div class="info-number"><?php echo gmdate("i:s", $attempt['time_spent']); ?></div>
-                        <div class="info-label">Времени потрачено</div>
+                        <div class="info-label" data-translate-key="test_result_time_spent"><?php echo translate('test_result_time_spent'); ?></div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -504,24 +509,24 @@ $score_info = getScoreClass($attempt['score']);
         <div class="progress-summary">
             <div class="summary-card">
                 <div class="summary-number" style="color: #28a745;"><?php echo $attempt['correct_answers']; ?></div>
-                <div class="summary-label">Правильно</div>
+                <div class="summary-label" data-translate-key="test_result_correct_label"><?php echo translate('test_result_correct_label'); ?></div>
             </div>
             <div class="summary-card">
                 <div class="summary-number" style="color: #dc3545;"><?php echo $attempt['total_questions'] - $attempt['correct_answers']; ?></div>
-                <div class="summary-label">Неправильно</div>
+                <div class="summary-label" data-translate-key="test_result_incorrect_label"><?php echo translate('test_result_incorrect_label'); ?></div>
             </div>
             <div class="summary-card">
                 <div class="summary-number" style="color: #667eea;"><?php echo round($attempt['score'], 1); ?>%</div>
-                <div class="summary-label">Итоговый балл</div>
+                <div class="summary-label" data-translate-key="test_result_final_score"><?php echo translate('test_result_final_score'); ?></div>
             </div>
         </div>
 
         <div class="card">
-            <h2>📝 Подробный разбор ответов</h2>
+            <h2 data-translate-key="test_result_detailed_review">📝 <?php echo translate('test_result_detailed_review'); ?></h2>
             <?php foreach ($answers as $index => $answer): ?>
                 <div class="question-review <?php echo $answer['is_correct'] ? 'correct' : 'incorrect'; ?>">
                     <div class="question-text">
-                        Вопрос <?php echo $index + 1; ?>: <?php echo htmlspecialchars($answer['question']); ?>
+                        <span data-translate-key="test_result_question_number" data-number="<?php echo $index + 1; ?>"><?php echo str_replace('{number}', $index + 1, translate('test_result_question_number')); ?></span> <?php echo htmlspecialchars($answer['question']); ?>
                     </div>
                     
                     <div class="answer-options">
@@ -546,11 +551,11 @@ $score_info = getScoreClass($attempt['score']);
                                 <div class="option-letter"><?php echo $letter; ?></div>
                                 <div class="option-text"><?php echo htmlspecialchars($text); ?></div>
                                 <?php if ($isSelected && $isCorrect): ?>
-                                    <div class="result-indicator result-correct">✓ Ваш ответ - правильный</div>
+                                    <div class="result-indicator result-correct" data-translate-key="test_result_your_answer_correct"><?php echo translate('test_result_your_answer_correct'); ?></div>
                                 <?php elseif ($isSelected && !$isCorrect): ?>
-                                    <div class="result-indicator result-incorrect">✗ Ваш ответ - неправильный</div>
+                                    <div class="result-indicator result-incorrect" data-translate-key="test_result_your_answer_incorrect"><?php echo translate('test_result_your_answer_incorrect'); ?></div>
                                 <?php elseif (!$isSelected && $isCorrect): ?>
-                                    <div class="result-indicator result-correct">✓ Правильный ответ</div>
+                                    <div class="result-indicator result-correct" data-translate-key="test_result_correct_answer"><?php echo translate('test_result_correct_answer'); ?></div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -560,10 +565,73 @@ $score_info = getScoreClass($attempt['score']);
         </div>
 
         <div class="actions">
-            <a href="test_take.php?test_id=<?php echo $attempt['test_id']; ?>" class="btn btn-primary">🔄 Пройти тест заново</a>
-            <a href="tests.php" class="btn btn-info">📚 Все тесты</a>
-            <a href="dashboard.php" class="btn">🏠 На главную</a>
+            <a href="test_take.php?test_id=<?php echo $attempt['test_id']; ?>" class="btn btn-primary" data-translate-key="test_result_retake_test"><?php echo translate('test_result_retake_test'); ?></a>
+            <a href="tests.php" class="btn btn-info" data-translate-key="test_result_all_tests"><?php echo translate('test_result_all_tests'); ?></a>
+            <a href="dashboard.php" class="btn" data-translate-key="test_result_home"><?php echo translate('test_result_home'); ?></a>
         </div>
     </div>
+
+    <script>
+        // Глобальная функция для обновления переводов с плейсхолдерами
+        window.updateTestResultTranslations = function(currentLang) {
+            // Если язык не передан, получаем его из атрибута документа
+            if (!currentLang) {
+                currentLang = document.documentElement.lang || 'ru';
+            }
+            
+            // Обновляем элементы с плейсхолдерами
+            const questionElements = document.querySelectorAll('[data-translate-key="test_result_question_number"]');
+            questionElements.forEach(element => {
+                if (typeof translations !== 'undefined') {
+                    const langTranslations = translations[currentLang] || translations['ru'];
+                    if (langTranslations && langTranslations['test_result_question_number']) {
+                        const questionNumber = element.getAttribute('data-number') || '1';
+                        const translatedText = langTranslations['test_result_question_number']
+                            .replace('{number}', questionNumber);
+                        element.textContent = translatedText;
+                    }
+                }
+            });
+            
+            // Обновляем элемент с оценкой (score-text) 
+            const scoreTextElement = document.querySelector('.score-text[data-score-class]');
+            if (scoreTextElement && typeof translations !== 'undefined') {
+                const langTranslations = translations[currentLang] || translations['ru'];
+                const scoreClass = scoreTextElement.getAttribute('data-score-class');
+                const translateKey = 'test_result_' + scoreClass;
+                
+                if (langTranslations && langTranslations[translateKey]) {
+                    scoreTextElement.textContent = langTranslations[translateKey];
+                }
+            }
+        };
+
+        // Переопределяем updateTranslations из language_switcher.php для обработки плейсхолдеров
+        document.addEventListener('DOMContentLoaded', function() {
+            // Сохраняем оригинальную функцию updateTranslations
+            const originalUpdateTranslations = window.updateTranslations;
+            
+            // Переопределяем функцию updateTranslations
+            window.updateTranslations = function() {
+                // Вызываем оригинальную функцию
+                if (originalUpdateTranslations) {
+                    originalUpdateTranslations();
+                }
+                
+                // Дополнительно обрабатываем элементы с плейсхолдерами
+                // Получаем текущий язык из той же переменной, что использует language_switcher
+                const lang = typeof currentLang !== 'undefined' ? currentLang : (document.documentElement.lang || 'ru');
+                if (typeof window.updateTestResultTranslations === 'function') {
+                    window.updateTestResultTranslations(lang);
+                }
+                
+                // Обновляем title страницы
+                const langTranslations = translations[lang] || translations['ru'];
+                if (langTranslations && langTranslations['test_result_title']) {
+                    document.title = 'QuizCard - ' + langTranslations['test_result_title'];
+                }
+            };
+        });
+    </script>
 </body>
 </html>

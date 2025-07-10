@@ -4,6 +4,8 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/init_language.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -42,11 +44,11 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 5);
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Тесты</title>
+    <title><?php echo translate('student_tests_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -425,22 +427,23 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 5);
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>🧪 Тесты</h1>
+                <h1 data-translate-key="tests_page_title"><?php echo translate('tests_page_title'); ?></h1>
                 <div class="breadcrumb">
-                    <a href="dashboard.php">Главная</a> → Тесты
+                    <a href="dashboard.php" data-translate-key="nav_dashboard"><?php echo translate('nav_dashboard'); ?></a> → <span data-translate-key="tests"><?php echo translate('tests'); ?></span>
                 </div>
             </div>
             <div class="user-info">
-                <a href="dashboard.php" class="btn">← На главную</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <?php include 'language_switcher.php'; ?>
+                <a href="dashboard.php" class="btn" data-translate-key="go_to_main"><?php echo translate('go_to_main'); ?></a>
+                <a href="../logout.php" class="btn" data-translate-key="logout"><?php echo translate('logout'); ?></a>
             </div>
         </div>
     </header>
 
     <div class="container">
         <div class="welcome-card">
-            <h2>Проверьте свои знания!</h2>
-            <p>Пройдите тесты по изученным словам и получите оценку своих знаний. Система покажет детальную статистику и поможет выявить слабые места.</p>
+            <h2 data-translate-key="check_knowledge_title"><?php echo translate('check_knowledge_title'); ?></h2>
+            <p data-translate-key="check_knowledge_desc"><?php echo translate('check_knowledge_desc'); ?></p>
         </div>
 
         <?php
@@ -469,29 +472,29 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 5);
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo $total_tests; ?></div>
-                <div class="stat-label">Доступно тестов</div>
+                <div class="stat-label" data-translate-key="available_tests_stat"><?php echo translate('available_tests_stat'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $total_attempts; ?></div>
-                <div class="stat-label">Попыток пройдено</div>
+                <div class="stat-label" data-translate-key="attempts_completed_stat"><?php echo translate('attempts_completed_stat'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $average_score; ?>%</div>
-                <div class="stat-label">Средний балл</div>
+                <div class="stat-label" data-translate-key="average_score_stat"><?php echo translate('average_score_stat'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($available_tests); ?></div>
-                <div class="stat-label">Колод с тестами</div>
+                <div class="stat-label" data-translate-key="decks_with_tests_stat"><?php echo translate('decks_with_tests_stat'); ?></div>
             </div>
         </div>
 
         <div class="card">
-            <h2>📚 Тесты по колодам</h2>
+            <h2 data-translate-key="tests_by_decks_title"><?php echo translate('tests_by_decks_title'); ?></h2>
             <?php if (empty($available_tests)): ?>
                 <div class="empty-state">
-                    <h3>📝 Тесты не найдены</h3>
-                    <p>Ваш преподаватель еще не создал тесты для ваших колод. Пока вы можете изучать слова с помощью карточек.</p>
-                    <a href="flashcards.php" class="btn btn-primary" style="margin-top: 1rem;">🎯 Изучать карточки</a>
+                    <h3 data-translate-key="tests_not_found_title"><?php echo translate('tests_not_found_title'); ?></h3>
+                    <p data-translate-key="tests_not_found_desc"><?php echo translate('tests_not_found_desc'); ?></p>
+                    <a href="flashcards.php" class="btn btn-primary" style="margin-top: 1rem;" data-translate-key="study_flashcards"><?php echo translate('study_flashcards'); ?></a>
                 </div>
             <?php else: ?>
                 <?php foreach ($available_tests as $deck_data): ?>
@@ -509,15 +512,15 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 5);
                                     <div class="test-info">
                                         <div class="info-item">
                                             <div class="info-number"><?php echo $test_item['questions_count']; ?></div>
-                                            <div class="info-label">Вопросов</div>
+                                            <div class="info-label" data-translate-key="questions_count"><?php echo translate('questions_count'); ?></div>
                                         </div>
                                         <div class="info-item">
                                             <div class="info-number"><?php echo $test_item['time_limit'] ?: '∞'; ?></div>
-                                            <div class="info-label">Минут</div>
+                                            <div class="info-label" data-translate-key="minutes_count"><?php echo translate('minutes_count'); ?></div>
                                         </div>
                                         <div class="info-item">
                                             <div class="info-number"><?php echo $test_item['student_stats']['attempts_count'] ?? 0; ?></div>
-                                            <div class="info-label">Попыток</div>
+                                            <div class="info-label" data-translate-key="attempts_count"><?php echo translate('attempts_count'); ?></div>
                                         </div>
                                     </div>
                                     
@@ -531,27 +534,27 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 5);
                                                 elseif ($score >= 60) echo 'score-average';
                                                 else echo 'score-poor';
                                                 ?>">
-                                                Лучший результат: <?php echo $test_item['student_stats']['best_score']; ?>%
+                                                <span data-translate-key="best_result"><?php echo translate('best_result'); ?></span>: <?php echo $test_item['student_stats']['best_score']; ?>%
                                             </div>
                                             <?php if ($test_item['student_stats']['last_attempt']): ?>
                                             <div style="font-size: 0.9rem; color: #666;">
-                                                Последняя попытка: <?php echo date('d.m.Y', strtotime($test_item['student_stats']['last_attempt'])); ?>
+                                                <span data-translate-key="last_attempt"><?php echo translate('last_attempt'); ?></span>: <?php echo date('d.m.Y', strtotime($test_item['student_stats']['last_attempt'])); ?>
                                             </div>
                                             <?php endif; ?>
                                         </div>
                                     <?php else: ?>
                                         <div class="test-stats">
-                                            <div class="best-score score-none">Тест еще не пройден</div>
+                                            <div class="best-score score-none" data-translate-key="test_not_taken"><?php echo translate('test_not_taken'); ?></div>
                                         </div>
                                     <?php endif; ?>
                                     
                                     <div class="test-actions">
-                                        <a href="test_take.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-success">
-                                            🚀 Пройти тест
+                                        <a href="test_take.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-success" data-translate-key="take_test">
+                                            <?php echo translate('take_test'); ?>
                                         </a>
                                         <?php if (isset($test_item['student_stats']) && is_array($test_item['student_stats']) && ($test_item['student_stats']['attempts_count'] ?? 0) > 0): ?>
-                                            <a href="test_result.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-info">
-                                                📊 Результаты
+                                            <a href="test_result.php?test_id=<?php echo $test_item['id']; ?>" class="btn btn-info" data-translate-key="view_results">
+                                                <?php echo translate('view_results'); ?>
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -565,7 +568,7 @@ $recent_attempts = $test->getStudentRecentAttempts($student_id, 5);
 
         <?php if (!empty($recent_attempts)): ?>
             <div class="card">
-                <h2>📈 Последние результаты</h2>
+                <h2 data-translate-key="recent_results_title"><?php echo translate('recent_results_title'); ?></h2>
                 <div class="recent-attempts">
                     <?php foreach ($recent_attempts as $attempt): ?>
                         <div class="attempt-item">

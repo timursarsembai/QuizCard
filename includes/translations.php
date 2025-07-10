@@ -59,4 +59,38 @@ function getTranslation($key, $lang = 'en', $fallback_lang = 'en') {
 function t($key, $lang = 'en') {
     return getTranslation($key, $lang);
 }
+
+/**
+ * Функция для получения текущего языка
+ * @return string Текущий язык
+ */
+function getCurrentLanguage() {
+    // Приоритет: сессия -> язык браузера -> русский по умолчанию
+    if (isset($_SESSION['language']) && in_array($_SESSION['language'], ['kk', 'ru', 'en'])) {
+        return $_SESSION['language'];
+    }
+    
+    // Если в сессии нет языка, попробуем определить из браузера
+    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        $browser_lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+        if (in_array($browser_lang, ['kk', 'ru', 'en'])) {
+            $_SESSION['language'] = $browser_lang;
+            return $browser_lang;
+        }
+    }
+    
+    // По умолчанию русский
+    $_SESSION['language'] = 'ru';
+    return 'ru';
+}
+
+/**
+ * Основная функция перевода
+ * @param string $key Ключ перевода
+ * @return string Переведенный текст
+ */
+function translate($key) {
+    $current_lang = getCurrentLanguage();
+    return getTranslation($key, $current_lang, 'ru');
+}
 ?>

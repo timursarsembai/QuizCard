@@ -4,6 +4,8 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
+require_once '../includes/init_language.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -59,11 +61,11 @@ switch ($sort_by) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Мой словарь</title>
+    <title>QuizCard - <?php echo translate('my_vocabulary_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -407,35 +409,36 @@ switch ($sort_by) {
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>📚 Мой словарь</h1>
+                <h1 data-translate-key="my_vocabulary_title">📚 <?php echo translate('my_vocabulary_title'); ?></h1>
             </div>
             <div class="user-info">
+                <?php include 'language_switcher.php'; ?>
                 <span><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
-                <a href="dashboard.php" class="btn">← Назад</a>
+                <a href="dashboard.php" class="btn" data-translate-key="back_to_dashboard"><?php echo translate('back_to_dashboard'); ?></a>
             </div>
         </div>
     </header>
 
     <div class="container">
         <div class="card">
-            <h2>Поиск по словарю</h2>
-            <input type="text" id="searchBox" class="search-box" placeholder="Поиск слов...">
+            <h2 data-translate-key="vocabulary_search_title"><?php echo translate('vocabulary_search_title'); ?></h2>
+            <input type="text" id="searchBox" class="search-box" placeholder="<?php echo translate('search_words_placeholder'); ?>" data-translate-key="search_words_placeholder">
             
             <div class="filter-tabs">
-                <button class="filter-tab active" onclick="filterWords('all')">Все слова</button>
-                <button class="filter-tab" onclick="filterWords('ready')">К повторению</button>
-                <button class="filter-tab" onclick="filterWords('learned')">Изученные</button>
-                <button class="filter-tab" onclick="filterWords('learning')">Изучается</button>
-                <button class="filter-tab" onclick="filterWords('new')">Новые</button>
+                <button class="filter-tab active" onclick="filterWords('all')" data-translate-key="filter_all_words"><?php echo translate('filter_all_words'); ?></button>
+                <button class="filter-tab" onclick="filterWords('ready')" data-translate-key="filter_ready_words"><?php echo translate('filter_ready_words'); ?></button>
+                <button class="filter-tab" onclick="filterWords('learned')" data-translate-key="filter_learned_words"><?php echo translate('filter_learned_words'); ?></button>
+                <button class="filter-tab" onclick="filterWords('learning')" data-translate-key="filter_learning_words"><?php echo translate('filter_learning_words'); ?></button>
+                <button class="filter-tab" onclick="filterWords('new')" data-translate-key="filter_new_words"><?php echo translate('filter_new_words'); ?></button>
             </div>
         </div>
 
         <!-- Фильтры и сортировка -->
         <div class="filters">
             <div class="filter-group">
-                <label for="deck-filter">Колода:</label>
+                <label for="deck-filter" data-translate-key="filter_deck_label"><?php echo translate('filter_deck_label'); ?></label>
                 <select id="deck-filter" name="deck_id">
-                    <option value="0" <?php echo $selected_deck == 0 ? 'selected' : ''; ?>>Все колоды</option>
+                    <option value="0" <?php echo $selected_deck == 0 ? 'selected' : ''; ?> data-translate-key="filter_all_decks"><?php echo translate('filter_all_decks'); ?></option>
                     <?php foreach ($student_decks as $deck): ?>
                         <option value="<?php echo $deck['id']; ?>" 
                                 <?php echo $selected_deck == $deck['id'] ? 'selected' : ''; ?>>
@@ -446,27 +449,27 @@ switch ($sort_by) {
             </div>
             
             <div class="filter-group">
-                <label for="sort-filter">Сортировка:</label>
+                <label for="sort-filter" data-translate-key="filter_sort_label"><?php echo translate('filter_sort_label'); ?></label>
                 <select id="sort-filter" name="sort">
-                    <option value="date" <?php echo $sort_by == 'date' ? 'selected' : ''; ?>>По дате добавления</option>
-                    <option value="easy_first" <?php echo $sort_by == 'easy_first' ? 'selected' : ''; ?>>Сначала легкие слова</option>
-                    <option value="hard_first" <?php echo $sort_by == 'hard_first' ? 'selected' : ''; ?>>Сначала трудные слова</option>
+                    <option value="date" <?php echo $sort_by == 'date' ? 'selected' : ''; ?> data-translate-key="filter_sort_date"><?php echo translate('filter_sort_date'); ?></option>
+                    <option value="easy_first" <?php echo $sort_by == 'easy_first' ? 'selected' : ''; ?> data-translate-key="filter_sort_easy_first"><?php echo translate('filter_sort_easy_first'); ?></option>
+                    <option value="hard_first" <?php echo $sort_by == 'hard_first' ? 'selected' : ''; ?> data-translate-key="filter_sort_hard_first"><?php echo translate('filter_sort_hard_first'); ?></option>
                 </select>
             </div>
             
             <div class="filter-actions">
-                <button class="btn-filter" onclick="applyFilters()">Применить</button>
-                <a href="vocabulary_view.php" class="btn-filter secondary">Сбросить</a>
+                <button class="btn-filter" onclick="applyFilters()" data-translate-key="filter_apply_button"><?php echo translate('filter_apply_button'); ?></button>
+                <a href="vocabulary_view.php" class="btn-filter secondary" data-translate-key="filter_reset_button"><?php echo translate('filter_reset_button'); ?></a>
             </div>
         </div>
 
         <div class="card">
-            <h2>Словарь <span id="wordsCount">(<?php echo count($words); ?> слов)</span></h2>
+            <h2 data-translate-key="vocabulary_words_count"><?php echo str_replace('{count}', count($words), translate('vocabulary_words_count')); ?></h2>
             
             <?php if (empty($words)): ?>
                 <div class="no-words">
-                    <h3>📝 Словарь пуст</h3>
-                    <p>Ваш преподаватель пока не добавил слова для изучения.</p>
+                    <h3 data-translate-key="vocabulary_empty_title">📝 <?php echo translate('vocabulary_empty_title'); ?></h3>
+                    <p data-translate-key="vocabulary_empty_desc"><?php echo translate('vocabulary_empty_desc'); ?></p>
                 </div>
             <?php else: ?>
                 <div class="vocabulary-grid" id="vocabularyGrid">
@@ -481,16 +484,16 @@ switch ($sort_by) {
                         
                         if ($is_new) {
                             $status_class = 'status-new';
-                            $status_text = 'Новое';
+                            $status_text = translate('word_status_new');
                         } elseif ($is_ready) {
                             $status_class = 'status-ready';
-                            $status_text = 'К повторению';
+                            $status_text = translate('word_status_ready');
                         } elseif ($is_learned) {
                             $status_class = 'status-learned';
-                            $status_text = 'Изучено';
+                            $status_text = translate('word_status_learned');
                         } else {
                             $status_class = 'status-learning';
-                            $status_text = 'Изучается';
+                            $status_text = translate('word_status_learning');
                         }
                         ?>
                         <div class="word-card" data-foreign="<?php echo strtolower(htmlspecialchars($word['foreign_word'])); ?>" 
@@ -512,31 +515,31 @@ switch ($sort_by) {
                             <div class="word-stats">
                                 <div class="stat-item">
                                     <div class="stat-value"><?php echo $word['total_attempts'] ?: 0; ?></div>
-                                    <div class="stat-label">Попыток</div>
+                                    <div class="stat-label" data-translate-key="word_stat_attempts"><?php echo translate('word_stat_attempts'); ?></div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-value"><?php echo $word['repetition_count'] ?: 0; ?></div>
-                                    <div class="stat-label">Успешных</div>
+                                    <div class="stat-label" data-translate-key="word_stat_successful"><?php echo translate('word_stat_successful'); ?></div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-value"><?php echo number_format($word['ease_factor'] ?: 2.5, 1); ?></div>
-                                    <div class="stat-label">Легкость</div>
+                                    <div class="stat-label" data-translate-key="word_stat_ease"><?php echo translate('word_stat_ease'); ?></div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-value"><?php echo $word['interval_days'] ?: 1; ?></div>
-                                    <div class="stat-label">Интервал (дни)</div>
+                                    <div class="stat-label" data-translate-key="word_stat_interval"><?php echo translate('word_stat_interval'); ?></div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-value">
                                         <?php 
                                         if ($is_ready) {
-                                            echo 'Сегодня';
+                                            echo translate('word_review_today');
                                         } else {
                                             echo $next_review->format('d.m');
                                         }
                                         ?>
                                     </div>
-                                    <div class="stat-label">Следующий раз</div>
+                                    <div class="stat-label" data-translate-key="word_stat_next_review"><?php echo translate('word_stat_next_review'); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -547,8 +550,34 @@ switch ($sort_by) {
     </div>
 
     <script>
+        // Переводы для JavaScript (глобальная переменная)
+        window.jsTranslations = {
+            vocabulary_words_count: "<?php echo translate('vocabulary_words_count'); ?>",
+            current_language: "<?php echo getCurrentLanguage(); ?>"
+        };
+        
+        // Общее количество слов для правильного отображения при переключении языка
+        const totalWordsCount = <?php echo count($words); ?>;
+        
         let allWords = document.querySelectorAll('.word-card');
         let currentFilter = 'all';
+
+        // Глобальная функция для обновления переводов с плейсхолдерами 
+        window.updateVocabularyTranslations = function() {
+            // Обновляем заголовок с количеством слов
+            const mainTitle = document.querySelector('[data-translate-key="vocabulary_words_count"]');
+            if (mainTitle && typeof translations !== 'undefined') {
+                const currentLang = document.documentElement.lang || 'ru';
+                const langTranslations = translations[currentLang] || translations['ru'];
+                if (langTranslations && langTranslations['vocabulary_words_count']) {
+                    // Получаем текущее количество видимых слов
+                    const visibleCards = document.querySelectorAll('.word-card:not([style*="display: none"])');
+                    const visibleCount = visibleCards.length;
+                    const translatedText = langTranslations['vocabulary_words_count'].replace('{count}', visibleCount);
+                    mainTitle.textContent = translatedText;
+                }
+            }
+        };
 
         // Поиск
         document.getElementById('searchBox').addEventListener('input', function() {
@@ -591,8 +620,32 @@ switch ($sort_by) {
                 }
             });
             
-            // Обновляем счетчик
-            document.getElementById('wordsCount').textContent = `(${visibleCount} слов)`;
+            // Обновляем заголовок с правильным переводом и количеством
+            const mainTitle = document.querySelector('[data-translate-key="vocabulary_words_count"]');
+            if (mainTitle) {
+                // Используем jsTranslations для текущего языка
+                const translatedText = window.jsTranslations.vocabulary_words_count.replace('{count}', visibleCount);
+                mainTitle.textContent = translatedText;
+            }
+        }
+        
+        // Функция для получения правильной формы слова "слов" в зависимости от языка и числа
+        function getWordsLabel(count) {
+            const lang = window.jsTranslations.current_language;
+            
+            if (lang === 'ru') {
+                if (count % 10 === 1 && count % 100 !== 11) {
+                    return 'слово';
+                } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+                    return 'слова';
+                } else {
+                    return 'слов';
+                }
+            } else if (lang === 'kk') {
+                return 'сөз';
+            } else { // en
+                return count === 1 ? 'word' : 'words';
+            }
         }
 
         // Функция применения фильтров
@@ -625,6 +678,41 @@ switch ($sort_by) {
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
+        });
+
+        // Переопределяем updateTranslations из language_switcher.php для обработки плейсхолдеров
+        document.addEventListener('DOMContentLoaded', function() {
+            // Сохраняем оригинальную функцию updateTranslations
+            const originalUpdateTranslations = window.updateTranslations;
+            
+            // Переопределяем функцию updateTranslations
+            window.updateTranslations = function() {
+                // Вызываем оригинальную функцию
+                if (originalUpdateTranslations) {
+                    originalUpdateTranslations();
+                }
+                
+                // Обновляем jsTranslations для нового языка
+                const currentLang = document.documentElement.lang || 'ru';
+                if (typeof translations !== 'undefined' && translations[currentLang]) {
+                    window.jsTranslations.vocabulary_words_count = translations[currentLang]['vocabulary_words_count'] || window.jsTranslations.vocabulary_words_count;
+                    window.jsTranslations.current_language = currentLang;
+                }
+                
+                // Дополнительно обрабатываем элементы с плейсхолдерами
+                if (typeof window.updateVocabularyTranslations === 'function') {
+                    window.updateVocabularyTranslations();
+                } else {
+                    // Если функция не доступна, обновляем вручную
+                    const mainTitle = document.querySelector('[data-translate-key="vocabulary_words_count"]');
+                    if (mainTitle) {
+                        const visibleCards = document.querySelectorAll('.word-card:not([style*="display: none"])');
+                        const visibleCount = visibleCards.length;
+                        const translatedText = window.jsTranslations.vocabulary_words_count.replace('{count}', visibleCount);
+                        mainTitle.textContent = translatedText;
+                    }
+                }
+            };
         });
     </script>
 </body>

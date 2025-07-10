@@ -5,6 +5,7 @@ require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
 require_once '../classes/Vocabulary.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -77,7 +78,7 @@ $words = $vocabulary->getVocabularyByDeck($deck_id);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Управление тестами</title>
+    <title data-translate-key="test_manager_title">QuizCard - Управление тестами</title>
     <style>
         * {
             margin: 0;
@@ -392,21 +393,23 @@ $words = $vocabulary->getVocabularyByDeck($deck_id);
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>🧪 Управление тестами</h1>
+                <h1 data-translate-key="test_manager_title">🧪 Управление тестами</h1>
                 <div class="breadcrumb">
-                    <a href="decks.php">Колоды</a> → Тесты колоды
+                    <a href="decks.php" data-translate-key="nav_decks">Колоды</a> → <span data-translate-key="test_manager_breadcrumb">Тесты колоды</span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="decks.php" class="btn">← Назад</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <a href="decks.php" class="btn" data-translate-key="back_button">← Назад</a>
+                <a href="../logout.php" class="btn" data-translate-key="logout_button">Выйти</a>
             </div>
         </div>
     </header>
 
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="deck-info" style="border-left-color: <?php echo htmlspecialchars($current_deck['color']); ?>">
-            <h2>Колода: <?php echo htmlspecialchars($current_deck['name']); ?></h2>
+            <h2><span data-translate-key="deck_prefix">Колода:</span> <?php echo htmlspecialchars($current_deck['name']); ?></h2>
             <?php if ($current_deck['description']): ?>
                 <p><?php echo htmlspecialchars($current_deck['description']); ?></p>
             <?php endif; ?>
@@ -423,57 +426,57 @@ $words = $vocabulary->getVocabularyByDeck($deck_id);
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($words); ?></div>
-                <div class="stat-label">Слов в колоде</div>
+                <div class="stat-label" data-translate-key="words_in_deck">Слов в колоде</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($tests); ?></div>
-                <div class="stat-label">Тестов создано</div>
+                <div class="stat-label" data-translate-key="tests_created">Тестов создано</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo array_sum(array_column($tests, 'attempts_count')); ?></div>
-                <div class="stat-label">Всего попыток</div>
+                <div class="stat-label" data-translate-key="total_attempts">Всего попыток</div>
             </div>
         </div>
 
         <?php if (count($words) < 4): ?>
             <div class="alert alert-error">
-                <strong>Внимание!</strong> Для создания теста необходимо минимум 4 слова в колоде. 
-                Сейчас в колоде <?php echo count($words); ?> слов(а). 
-                <a href="vocabulary.php?deck_id=<?php echo $deck_id; ?>">Добавить слова</a>
+                <strong data-translate-key="warning_title">Внимание!</strong> <span data-translate-key="minimum_words_required">Для создания теста необходимо минимум 4 слова в колоде.</span>
+                <span data-translate-key="current_words_count">Сейчас в колоде</span> <?php echo count($words); ?> <span data-translate-key="words_plural">слов(а)</span>. 
+                <a href="vocabulary.php?deck_id=<?php echo $deck_id; ?>" data-translate-key="add_words_link">Добавить слова</a>
             </div>
         <?php else: ?>
             <div class="card">
-                <h2>Создать новый тест</h2>
+                <h2 data-translate-key="create_new_test">Создать новый тест</h2>
                 <form method="POST" action="">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="test_name">Название теста:</label>
+                            <label for="test_name" data-translate-key="test_name_label">Название теста:</label>
                             <input type="text" id="test_name" name="test_name" required 
-                                   placeholder="Например: Тест по базовым словам">
+                                   data-translate-key="test_name_placeholder" placeholder="Например: Тест по базовым словам">
                         </div>
                         <div class="form-group">
-                            <label for="questions_count">Количество вопросов:</label>
+                            <label for="questions_count" data-translate-key="questions_count_label">Количество вопросов:</label>
                             <input type="number" id="questions_count" name="questions_count" 
                                    min="4" max="<?php echo count($words); ?>" value="10" required>
-                            <small style="color: #666; font-size: 0.9em;">Максимум: <?php echo count($words); ?> (количество слов в колоде)</small>
+                            <small style="color: #666; font-size: 0.9em;"><span data-translate-key="maximum_prefix">Максимум:</span> <?php echo count($words); ?> <span data-translate-key="words_count_suffix">(количество слов в колоде)</span></small>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="time_limit">Ограничение по времени (минуты, опционально):</label>
+                        <label for="time_limit" data-translate-key="time_limit_label">Ограничение по времени (минуты, опционально):</label>
                         <input type="number" id="time_limit" name="time_limit" min="1" max="60" 
-                               placeholder="Оставьте пустым для неограниченного времени">
+                               data-translate-key="time_limit_placeholder" placeholder="Оставьте пустым для неограниченного времени">
                     </div>
-                    <button type="submit" name="create_test" class="btn btn-primary">🧪 Создать тест</button>
+                    <button type="submit" name="create_test" class="btn btn-primary" data-translate-key="create_test_button">🧪 Создать тест</button>
                 </form>
             </div>
         <?php endif; ?>
 
         <div class="card">
-            <h2>Созданные тесты</h2>
+            <h2 data-translate-key="created_tests">Созданные тесты</h2>
             <?php if (empty($tests)): ?>
                 <div class="empty-state">
-                    <h3>📝 Тесты не созданы</h3>
-                    <p>Создайте первый тест для проверки знаний учеников.</p>
+                    <h3 data-translate-key="no_tests_title">📝 Тесты не созданы</h3>
+                    <p data-translate-key="no_tests_description">Создайте первый тест для проверки знаний учеников.</p>
                 </div>
             <?php else: ?>
                 <div class="tests-grid">
@@ -486,33 +489,34 @@ $words = $vocabulary->getVocabularyByDeck($deck_id);
                             <div class="test-stats">
                                 <div class="stat-item">
                                     <div class="stat-number"><?php echo $test_item['questions_count']; ?></div>
-                                    <div class="stat-label">Вопросов</div>
+                                    <div class="stat-label" data-translate-key="questions_stat">Вопросов</div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-number"><?php echo $test_item['time_limit'] ?: '∞'; ?></div>
-                                    <div class="stat-label">Минут</div>
+                                    <div class="stat-label" data-translate-key="minutes_stat">Минут</div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-number"><?php echo $test_item['attempts_count'] ?: 0; ?></div>
-                                    <div class="stat-label">Попыток</div>
+                                    <div class="stat-label" data-translate-key="attempts_stat">Попыток</div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-number"><?php echo date('d.m', strtotime($test_item['created_at'])); ?></div>
-                                    <div class="stat-label">Создан</div>
+                                    <div class="stat-label" data-translate-key="created_stat_short">Создан</div>
                                 </div>
                             </div>
                             
                             <div class="test-actions">
                                 <a href="test_edit.php?test_id=<?php echo $test_item['id']; ?>" 
-                                   class="btn btn-info" title="Редактировать вопросы">✏️</a>
+                                   class="btn btn-info" data-translate-key="edit_questions_tooltip" title="Редактировать вопросы">✏️</a>
                                 <a href="test_preview.php?test_id=<?php echo $test_item['id']; ?>" 
-                                   class="btn btn-success" title="Предварительный просмотр">👁️</a>
+                                   class="btn btn-success" data-translate-key="preview_tooltip" title="Предварительный просмотр">👁️</a>
                                 <a href="test_results.php?test_id=<?php echo $test_item['id']; ?>" 
-                                   class="btn btn-warning" title="Результаты учеников">📊</a>
+                                   class="btn btn-warning" data-translate-key="results_tooltip" title="Результаты учеников">📊</a>
                                 <a href="?deck_id=<?php echo $deck_id; ?>&delete_test=<?php echo $test_item['id']; ?>" 
                                    class="btn btn-danger" 
                                    onclick="return confirm('Вы уверены, что хотите удалить этот тест?')"
-                                   title="Удалить тест">🗑️</a>
+                                   data-confirm-key="delete_test_confirm"
+                                   data-translate-key="delete_tooltip" title="Удалить тест">🗑️</a>
                             </div>
                         </div>
                     <?php endforeach; ?>

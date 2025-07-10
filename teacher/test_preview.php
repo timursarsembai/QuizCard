@@ -4,6 +4,7 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -48,7 +49,7 @@ $questions = $test->getTestQuestions($test_id);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Предварительный просмотр теста</title>
+    <title data-translate-key="test_preview_title">QuizCard - Предварительный просмотр теста</title>
     <style>
         * {
             margin: 0;
@@ -296,39 +297,41 @@ $questions = $test->getTestQuestions($test_id);
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>👁️ Предварительный просмотр</h1>
+                <h1 data-translate-key="test_preview_title">👁️ Предварительный просмотр</h1>
                 <div class="breadcrumb">
-                    <a href="decks.php">Колоды</a> → 
-                    <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>">Тесты</a> → 
-                    Просмотр
+                    <a href="decks.php" data-translate-key="test_preview_breadcrumb_decks">Колоды</a> → 
+                    <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" data-translate-key="test_preview_breadcrumb_tests">Тесты</a> → 
+                    <span data-translate-key="test_preview_breadcrumb_preview">Просмотр</span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="test_edit.php?test_id=<?php echo $test_id; ?>" class="btn btn-primary">✏️ Редактировать</a>
-                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn">← Назад</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <a href="test_edit.php?test_id=<?php echo $test_id; ?>" class="btn btn-primary" data-translate-key="edit_test_button">✏️ Редактировать</a>
+                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn" data-translate-key="back_button">← Назад</a>
+                <a href="../logout.php" class="btn" data-translate-key="logout_button">Выйти</a>
             </div>
         </div>
     </header>
 
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="preview-notice">
-            <h3>ℹ️ Режим предварительного просмотра</h3>
-            <p>Здесь показано, как тест будет выглядеть для учеников. Правильные ответы выделены зеленым цветом.</p>
+            <h3 data-translate-key="preview_mode_title">ℹ️ Режим предварительного просмотра</h3>
+            <p data-translate-key="preview_mode_description">Здесь показано, как тест будет выглядеть для учеников. Правильные ответы выделены зеленым цветом.</p>
         </div>
 
         <div class="test-header">
             <div class="test-title"><?php echo htmlspecialchars($current_test['name']); ?></div>
-            <p>Колода: <?php echo htmlspecialchars($current_deck['name']); ?></p>
+            <p><span data-translate-key="deck_prefix">Колода:</span> <?php echo htmlspecialchars($current_deck['name']); ?></p>
             
             <div class="test-info">
                 <div class="info-item">
                     <div class="info-number"><?php echo count($questions); ?></div>
-                    <div class="info-label">Вопросов</div>
+                    <div class="info-label" data-translate-key="questions_stat">Вопросов</div>
                 </div>
                 <div class="info-item">
                     <div class="info-number"><?php echo $current_test['time_limit'] ?: '∞'; ?></div>
-                    <div class="info-label">Минут</div>
+                    <div class="info-label" data-translate-key="minutes_stat">Минут</div>
                 </div>
             </div>
         </div>
@@ -336,15 +339,15 @@ $questions = $test->getTestQuestions($test_id);
         <?php if (empty($questions)): ?>
             <div class="question-card">
                 <p style="text-align: center; color: #666; font-style: italic;">
-                    В тесте пока нет вопросов. 
-                    <a href="test_edit.php?test_id=<?php echo $test_id; ?>">Добавьте вопросы</a> 
-                    для предварительного просмотра.
+                    <span data-translate-key="no_questions_text">В тесте пока нет вопросов.</span>
+                    <a href="test_edit.php?test_id=<?php echo $test_id; ?>" data-translate-key="add_questions_link">Добавьте вопросы</a> 
+                    <span data-translate-key="preview_suffix">для предварительного просмотра.</span>
                 </p>
             </div>
         <?php else: ?>
             <?php foreach ($questions as $index => $question): ?>
                 <div class="question-card">
-                    <div class="question-number">Вопрос <?php echo $index + 1; ?></div>
+                    <div class="question-number"><span data-translate-key="question_prefix">Вопрос</span> <?php echo $index + 1; ?></div>
                     <div class="question-text"><?php echo htmlspecialchars($question['question']); ?></div>
                     
                     <div class="options">
@@ -352,7 +355,7 @@ $questions = $test->getTestQuestions($test_id);
                             <div class="option-letter">A</div>
                             <div class="option-text"><?php echo htmlspecialchars($question['option_a']); ?></div>
                             <?php if ($question['correct_answer'] === 'A'): ?>
-                                <div class="correct-indicator">✓ Правильный ответ</div>
+                                <div class="correct-indicator" data-translate-key="correct_answer_indicator">✓ Правильный ответ</div>
                             <?php endif; ?>
                         </div>
                         
@@ -360,7 +363,7 @@ $questions = $test->getTestQuestions($test_id);
                             <div class="option-letter">B</div>
                             <div class="option-text"><?php echo htmlspecialchars($question['option_b']); ?></div>
                             <?php if ($question['correct_answer'] === 'B'): ?>
-                                <div class="correct-indicator">✓ Правильный ответ</div>
+                                <div class="correct-indicator" data-translate-key="correct_answer_indicator">✓ Правильный ответ</div>
                             <?php endif; ?>
                         </div>
                         
@@ -368,7 +371,7 @@ $questions = $test->getTestQuestions($test_id);
                             <div class="option-letter">C</div>
                             <div class="option-text"><?php echo htmlspecialchars($question['option_c']); ?></div>
                             <?php if ($question['correct_answer'] === 'C'): ?>
-                                <div class="correct-indicator">✓ Правильный ответ</div>
+                                <div class="correct-indicator" data-translate-key="correct_answer_indicator">✓ Правильный ответ</div>
                             <?php endif; ?>
                         </div>
                         
@@ -376,7 +379,7 @@ $questions = $test->getTestQuestions($test_id);
                             <div class="option-letter">D</div>
                             <div class="option-text"><?php echo htmlspecialchars($question['option_d']); ?></div>
                             <?php if ($question['correct_answer'] === 'D'): ?>
-                                <div class="correct-indicator">✓ Правильный ответ</div>
+                                <div class="correct-indicator" data-translate-key="correct_answer_indicator">✓ Правильный ответ</div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -385,8 +388,8 @@ $questions = $test->getTestQuestions($test_id);
         <?php endif; ?>
 
         <div class="actions">
-            <a href="test_edit.php?test_id=<?php echo $test_id; ?>" class="btn btn-primary">✏️ Редактировать тест</a>
-            <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn">← Вернуться к тестам</a>
+            <a href="test_edit.php?test_id=<?php echo $test_id; ?>" class="btn btn-primary" data-translate-key="edit_test_action">✏️ Редактировать тест</a>
+            <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn" data-translate-key="return_to_tests_action">← Вернуться к тестам</a>
         </div>
     </div>
 </body>

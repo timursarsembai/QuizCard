@@ -4,6 +4,43 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/translations.php';
+
+// Fallback для переводов, если система не работает
+if (!function_exists('translate')) {
+    function translate($key) {
+        $fallbacks = [
+            'test_results_title' => 'Результаты теста',
+            'test_results_breadcrumb_decks' => 'Колоды',
+            'test_results_breadcrumb_tests' => 'Тесты',
+            'test_results_breadcrumb_results' => 'Результаты',
+            'back_button' => '← Назад',
+            'logout_button' => 'Выйти',
+            'test_info_prefix' => 'Тест:',
+            'deck_info_prefix' => 'Колода:',
+            'total_attempts_stat' => 'Всего попыток',
+            'unique_students_stat' => 'Уникальных учеников',
+            'average_score_stat' => 'Средний балл',
+            'best_results_title' => '🏆 Лучшие результаты учеников',
+            'all_attempts_title' => '📋 Все попытки',
+            'student_column' => 'Ученик',
+            'score_column' => 'Балл',
+            'correct_answers_column' => 'Правильных ответов',
+            'time_column' => 'Время',
+            'completion_date_column' => 'Дата прохождения',
+            'correct_answers_format' => 'из',
+            'no_results_title' => 'Пока нет результатов',
+            'no_results_description' => 'Ученики еще не проходили этот тест'
+        ];
+        return $fallbacks[$key] ?? $key;
+    }
+}
+
+if (!function_exists('getCurrentLanguage')) {
+    function getCurrentLanguage() {
+        return 'ru';
+    }
+}
 
 $database = new Database();
 $db = $database->getConnection();
@@ -87,11 +124,11 @@ if (!empty($attempts)) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Результаты теста</title>
+    <title data-translate-key="test_results_title">QuizCard - <?php echo translate('test_results_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -336,54 +373,55 @@ if (!empty($attempts)) {
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>📊 Результаты теста</h1>
+                <h1 data-translate-key="test_results_title">📊 <?php echo translate('test_results_title'); ?></h1>
                 <div class="breadcrumb">
-                    <a href="decks.php">Колоды</a> → 
-                    <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>">Тесты</a> → 
-                    Результаты
+                    <a href="decks.php" data-translate-key="test_results_breadcrumb_decks"><?php echo translate('test_results_breadcrumb_decks'); ?></a> → 
+                    <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" data-translate-key="test_results_breadcrumb_tests"><?php echo translate('test_results_breadcrumb_tests'); ?></a> → 
+                    <span data-translate-key="test_results_breadcrumb_results"><?php echo translate('test_results_breadcrumb_results'); ?></span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn">← Назад</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <?php include 'language_switcher.php'; ?>
+                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn" data-translate-key="back_button"><?php echo translate('back_button'); ?></a>
+                <a href="../logout.php" class="btn" data-translate-key="logout_button"><?php echo translate('logout_button'); ?></a>
             </div>
         </div>
     </header>
 
     <div class="container">
         <div class="test-info">
-            <h2>Тест: <?php echo htmlspecialchars($current_test['name']); ?></h2>
-            <p>Колода: <?php echo htmlspecialchars($current_deck['name']); ?></p>
+            <h2><span data-translate-key="test_info_prefix"><?php echo translate('test_info_prefix'); ?></span> <?php echo htmlspecialchars($current_test['name']); ?></h2>
+            <p><span data-translate-key="deck_info_prefix"><?php echo translate('deck_info_prefix'); ?></span> <?php echo htmlspecialchars($current_deck['name']); ?></p>
         </div>
 
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo $total_attempts; ?></div>
-                <div class="stat-label">Всего попыток</div>
+                <div class="stat-label" data-translate-key="total_attempts_stat"><?php echo translate('total_attempts_stat'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $unique_students; ?></div>
-                <div class="stat-label">Уникальных учеников</div>
+                <div class="stat-label" data-translate-key="unique_students_stat"><?php echo translate('unique_students_stat'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $average_score; ?>%</div>
-                <div class="stat-label">Средний балл</div>
+                <div class="stat-label" data-translate-key="average_score_stat"><?php echo translate('average_score_stat'); ?></div>
             </div>
         </div>
 
         <?php if (!empty($best_attempts)): ?>
             <div class="results-section">
                 <div class="section-header">
-                    <div class="section-title">🏆 Лучшие результаты учеников</div>
+                    <div class="section-title" data-translate-key="best_results_title"><?php echo translate('best_results_title'); ?></div>
                 </div>
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Ученик</th>
-                            <th>Балл</th>
-                            <th>Правильных ответов</th>
-                            <th>Время</th>
-                            <th>Дата прохождения</th>
+                            <th data-translate-key="student_column"><?php echo translate('student_column'); ?></th>
+                            <th data-translate-key="score_column"><?php echo translate('score_column'); ?></th>
+                            <th data-translate-key="correct_answers_column"><?php echo translate('correct_answers_column'); ?></th>
+                            <th data-translate-key="time_column"><?php echo translate('time_column'); ?></th>
+                            <th data-translate-key="completion_date_column"><?php echo translate('completion_date_column'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -404,7 +442,7 @@ if (!empty($attempts)) {
                                         <?php echo $attempt['score']; ?>%
                                     </span>
                                 </td>
-                                <td><?php echo $attempt['correct_answers']; ?> из <?php echo $attempt['total_questions']; ?></td>
+                                <td><?php echo $attempt['correct_answers']; ?> <span data-translate-key="correct_answers_format"><?php echo translate('correct_answers_format'); ?></span> <?php echo $attempt['total_questions']; ?></td>
                                 <td>
                                     <?php if ($attempt['time_spent']): ?>
                                         <span class="time-spent">
@@ -429,16 +467,16 @@ if (!empty($attempts)) {
         <?php if (!empty($attempts)): ?>
             <div class="results-section">
                 <div class="section-header">
-                    <div class="section-title">📋 Все попытки</div>
+                    <div class="section-title" data-translate-key="all_attempts_title"><?php echo translate('all_attempts_title'); ?></div>
                 </div>
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Ученик</th>
-                            <th>Балл</th>
-                            <th>Правильных ответов</th>
-                            <th>Время</th>
-                            <th>Дата прохождения</th>
+                            <th data-translate-key="student_column"><?php echo translate('student_column'); ?></th>
+                            <th data-translate-key="score_column"><?php echo translate('score_column'); ?></th>
+                            <th data-translate-key="correct_answers_column"><?php echo translate('correct_answers_column'); ?></th>
+                            <th data-translate-key="time_column"><?php echo translate('time_column'); ?></th>
+                            <th data-translate-key="completion_date_column"><?php echo translate('completion_date_column'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -459,7 +497,7 @@ if (!empty($attempts)) {
                                         <?php echo $attempt['score']; ?>%
                                     </span>
                                 </td>
-                                <td><?php echo $attempt['correct_answers']; ?> из <?php echo $attempt['total_questions']; ?></td>
+                                <td><?php echo $attempt['correct_answers']; ?> <span data-translate-key="correct_answers_format"><?php echo translate('correct_answers_format'); ?></span> <?php echo $attempt['total_questions']; ?></td>
                                 <td>
                                     <?php if ($attempt['time_spent']): ?>
                                         <span class="time-spent">
@@ -483,11 +521,53 @@ if (!empty($attempts)) {
             <div class="results-section">
                 <div class="no-results">
                     <div class="no-results-icon">📊</div>
-                    <h3>Пока нет результатов</h3>
-                    <p>Ученики еще не проходили этот тест</p>
+                    <h3 data-translate-key="no_results_title"><?php echo translate('no_results_title'); ?></h3>
+                    <p data-translate-key="no_results_description"><?php echo translate('no_results_description'); ?></p>
                 </div>
             </div>
         <?php endif; ?>
     </div>
+
+    <script>
+        // Обновление переводов после смены языка
+        function updateTranslations() {
+            // Обновляем все элементы с data-translate-key
+            document.querySelectorAll('[data-translate-key]').forEach(element => {
+                const key = element.getAttribute('data-translate-key');
+                if (translations[key]) {
+                    if (element.tagName.toLowerCase() === 'input' || element.tagName.toLowerCase() === 'textarea') {
+                        if (element.hasAttribute('placeholder')) {
+                            element.placeholder = translations[key];
+                        } else {
+                            element.value = translations[key];
+                        }
+                    } else {
+                        // Сохраняем иконки и другой HTML контент
+                        if (key === 'test_results_title' && element.tagName.toLowerCase() === 'h1') {
+                            element.innerHTML = '📊 ' + translations[key];
+                        } else if (key === 'best_results_title') {
+                            element.innerHTML = '🏆 ' + translations[key];
+                        } else if (key === 'all_attempts_title') {
+                            element.innerHTML = '📋 ' + translations[key];
+                        } else {
+                            element.textContent = translations[key];
+                        }
+                    }
+                }
+            });
+
+            // Обновляем title страницы
+            if (translations['test_results_title']) {
+                document.title = 'QuizCard - ' + translations['test_results_title'];
+            }
+        }
+
+        // Вызываем обновление переводов при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof updateTranslations === 'function') {
+                updateTranslations();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,3 +1,18 @@
+<?php
+session_start();
+
+// Проверяем, авторизован ли пользователь
+if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+    // Редиректим в зависимости от роли
+    if ($_SESSION['role'] === 'teacher') {
+        header('Location: teacher/dashboard.php');
+        exit();
+    } elseif ($_SESSION['role'] === 'student') {
+        header('Location: student/dashboard.php');
+        exit();
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="kk">
 <head>

@@ -4,6 +4,8 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
+require_once '../includes/init_language.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -81,11 +83,11 @@ if ($review_mode === 'today') {
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Карточки для изучения</title>
+    <title data-translate-key="flashcards_page_title"><?php echo translate('flashcards_page_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -116,6 +118,7 @@ if ($review_mode === 'today') {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
         }
 
         .logo h1 {
@@ -420,7 +423,7 @@ if ($review_mode === 'today') {
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>🎯 Карточки для изучения</h1>
+                <h1 data-translate-key="flashcards_header"><?php echo translate('flashcards_header'); ?></h1>
                 <?php if ($deck_info): ?>
                     <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem;">
                         📚 <?php echo htmlspecialchars($deck_info['name']); ?>
@@ -428,24 +431,25 @@ if ($review_mode === 'today') {
                 <?php endif; ?>
             </div>
             <div class="progress-info">
-                <span id="progress-text">Осталось: <span id="words-count"><?php echo count($words_for_review); ?></span> слов</span>
-                <a href="dashboard.php" class="btn">← Назад</a>
+                <?php include 'language_switcher.php'; ?>
+                <span id="progress-text"><span data-translate-key="words_remaining"><?php echo translate('words_remaining'); ?></span> <span id="words-count"><?php echo count($words_for_review); ?></span> <span data-translate-key="words_count_unit"><?php echo translate('words_count_unit'); ?></span></span>
+                <a href="dashboard.php" class="btn" data-translate-key="back_button"><?php echo translate('back_button'); ?></a>
             </div>
         </div>
         
         <!-- Кнопки для переключения режима повторения -->
         <div class="review-mode-controls">
             <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'normal'])); ?>" 
-               class="review-mode-btn <?php echo $review_mode === 'normal' ? 'active' : ''; ?>">
-                📅 Обычное изучение
+               class="review-mode-btn <?php echo $review_mode === 'normal' ? 'active' : ''; ?>"
+               data-translate-key="normal_learning"><?php echo translate('normal_learning'); ?>
             </a>
             <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'today'])); ?>" 
-               class="review-mode-btn <?php echo $review_mode === 'today' ? 'active' : ''; ?>">
-                🔄 Повторить сегодняшние
+               class="review-mode-btn <?php echo $review_mode === 'today' ? 'active' : ''; ?>"
+               data-translate-key="review_today_words"><?php echo translate('review_today_words'); ?>
             </a>
             <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'all_studied'])); ?>" 
-               class="review-mode-btn <?php echo $review_mode === 'all_studied' ? 'active' : ''; ?>">
-                📖 Повторить все изученные слова
+               class="review-mode-btn <?php echo $review_mode === 'all_studied' ? 'active' : ''; ?>"
+               data-translate-key="review_all_studied_words"><?php echo translate('review_all_studied_words'); ?>
             </a>
         </div>
     </header>
@@ -454,17 +458,17 @@ if ($review_mode === 'today') {
         <?php if (empty($words_for_review)): ?>
             <div class="no-words">
                 <?php if ($review_mode === 'today'): ?>
-                    <h2>📅 Сегодняшние слова</h2>
-                    <p>Сегодня вы еще не изучили ни одного слова. Попробуйте сначала пройти обычное изучение.</p>
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'normal'])); ?>" class="btn btn-primary">Начать изучение</a>
+                    <h2 data-translate-key="todays_words_title"><?php echo translate('todays_words_title'); ?></h2>
+                    <p data-translate-key="no_words_studied_today"><?php echo translate('no_words_studied_today'); ?></p>
+                    <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'normal'])); ?>" class="btn btn-primary" data-translate-key="start_learning_button"><?php echo translate('start_learning_button'); ?></a>
                 <?php elseif ($review_mode === 'all_studied'): ?>
-                    <h2>📖 Все изученные слова</h2>
-                    <p>У вас пока нет изученных слов для повторения. Изучите несколько слов, чтобы они появились здесь.</p>
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'normal'])); ?>" class="btn btn-primary">Начать изучение</a>
+                    <h2 data-translate-key="all_studied_words_title"><?php echo translate('all_studied_words_title'); ?></h2>
+                    <p data-translate-key="no_studied_words_yet"><?php echo translate('no_studied_words_yet'); ?></p>
+                    <a href="?<?php echo http_build_query(array_merge($_GET, ['review_mode' => 'normal'])); ?>" class="btn btn-primary" data-translate-key="start_learning_button"><?php echo translate('start_learning_button'); ?></a>
                 <?php else: ?>
-                    <h2>🎉 Отлично!</h2>
-                    <p>Сегодня нет слов для повторения. Возвращайтесь завтра за новыми заданиями!</p>
-                    <a href="dashboard.php" class="btn btn-primary">Вернуться на главную</a>
+                    <h2 data-translate-key="excellent_title"><?php echo translate('excellent_title'); ?></h2>
+                    <p data-translate-key="no_words_for_review_today"><?php echo translate('no_words_for_review_today'); ?></p>
+                    <a href="dashboard.php" class="btn btn-primary" data-translate-key="return_to_main"><?php echo translate('return_to_main'); ?></a>
                 <?php endif; ?>
             </div>
         <?php else: ?>
@@ -474,7 +478,7 @@ if ($review_mode === 'today') {
                         <div class="card-content" id="front-content">
                             <!-- Контент будет загружен через JavaScript -->
                         </div>
-                        <div class="click-hint">Нажмите, чтобы перевернуть карточку</div>
+                        <div class="click-hint" data-translate-key="click_to_flip_hint"><?php echo translate('click_to_flip_hint'); ?></div>
                     </div>
                     <div class="card-face card-back">
                         <div class="card-content" id="back-content">
@@ -485,18 +489,61 @@ if ($review_mode === 'today') {
             </div>
 
             <div class="controls">
-                <button class="control-btn btn-hard" onclick="rateWord('hard')">😅 Трудно</button>
-                <button class="control-btn btn-easy" onclick="rateWord('easy')">😊 Легко</button>
+                <button class="control-btn btn-hard" onclick="rateWord('hard')" data-translate-key="btn_hard"><?php echo translate('btn_hard'); ?></button>
+                <button class="control-btn btn-easy" onclick="rateWord('easy')" data-translate-key="btn_easy"><?php echo translate('btn_easy'); ?></button>
             </div>
         <?php endif; ?>
     </div>
 
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div>Загрузка следующей карточки...</div>
+        <div data-translate-key="loading_next_card"><?php echo translate('loading_next_card'); ?></div>
     </div>
 
     <script>
+        <?php
+        // Функция для получения перевода по ключу для конкретного языка
+        function translate_key($key, $lang) {
+            global $translations;
+            if (isset($translations[$lang][$key])) {
+                return $translations[$lang][$key];
+            }
+            return $key;
+        }
+        ?>
+        
+        // Переводы для JavaScript
+        const jsTranslations = {
+            'kk': {
+                'review_completed_title': '<?php echo addslashes(translate_key('review_completed_title', 'kk')); ?>',
+                'reviewed_todays_words': '<?php echo addslashes(translate_key('reviewed_todays_words', 'kk')); ?>',
+                'reviewed_all_words': '<?php echo addslashes(translate_key('reviewed_all_words', 'kk')); ?>',
+                'congratulations_title': '<?php echo addslashes(translate_key('congratulations_title', 'kk')); ?>',
+                'completed_todays_tasks': '<?php echo addslashes(translate_key('completed_todays_tasks', 'kk')); ?>',
+                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'kk')); ?>'
+            },
+            'ru': {
+                'review_completed_title': '<?php echo addslashes(translate_key('review_completed_title', 'ru')); ?>',
+                'reviewed_todays_words': '<?php echo addslashes(translate_key('reviewed_todays_words', 'ru')); ?>',
+                'reviewed_all_words': '<?php echo addslashes(translate_key('reviewed_all_words', 'ru')); ?>',
+                'congratulations_title': '<?php echo addslashes(translate_key('congratulations_title', 'ru')); ?>',
+                'completed_todays_tasks': '<?php echo addslashes(translate_key('completed_todays_tasks', 'ru')); ?>',
+                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'ru')); ?>'
+            },
+            'en': {
+                'review_completed_title': '<?php echo addslashes(translate_key('review_completed_title', 'en')); ?>',
+                'reviewed_todays_words': '<?php echo addslashes(translate_key('reviewed_todays_words', 'en')); ?>',
+                'reviewed_all_words': '<?php echo addslashes(translate_key('reviewed_all_words', 'en')); ?>',
+                'congratulations_title': '<?php echo addslashes(translate_key('congratulations_title', 'en')); ?>',
+                'completed_todays_tasks': '<?php echo addslashes(translate_key('completed_todays_tasks', 'en')); ?>',
+                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'en')); ?>'
+            }
+        };
+
+        function getTranslation(key, lang) {
+            return jsTranslations[lang] && jsTranslations[lang][key] ? jsTranslations[lang][key] : key;
+        }
+
         let currentWord = null;
         let words = <?php echo json_encode($words_for_review); ?>;
         let currentIndex = 0;
@@ -525,23 +572,19 @@ if ($review_mode === 'today') {
                 // Показываем сначала иностранное слово
                 frontContent.innerHTML = `
                     <h2>${escapeHtml(word.foreign_word)}</h2>
-                    <p>Иностранное слово</p>
                     ${word.image_path ? `<img src="../${escapeHtml(word.image_path)}" alt="Изображение" class="card-image">` : ''}
                 `;
                 backContent.innerHTML = `
                     <h2>${escapeHtml(word.translation)}</h2>
-                    <p>Перевод</p>
                 `;
             } else {
                 // Показываем сначала перевод
                 frontContent.innerHTML = `
                     <h2>${escapeHtml(word.translation)}</h2>
-                    <p>Перевод</p>
                     ${word.image_path ? `<img src="../${escapeHtml(word.image_path)}" alt="Изображение" class="card-image">` : ''}
                 `;
                 backContent.innerHTML = `
                     <h2>${escapeHtml(word.foreign_word)}</h2>
-                    <p>Иностранное слово</p>
                 `;
             }
         }
@@ -631,24 +674,28 @@ if ($review_mode === 'today') {
         }
 
         function showCompletionMessage() {
+            // Получаем текущий язык из localStorage или используем язык с сервера по умолчанию
+            const currentLang = localStorage.getItem('selectedLanguage') || '<?php echo getCurrentLanguage(); ?>';
             let title, message;
             
             if (reviewMode === 'today') {
-                title = '🎉 Повторение завершено!';
-                message = 'Вы повторили все слова, изученные сегодня. Отличная работа!';
+                title = getTranslation('review_completed_title', currentLang);
+                message = getTranslation('reviewed_todays_words', currentLang);
             } else if (reviewMode === 'all_studied') {
-                title = '🎉 Повторение завершено!';
-                message = 'Вы повторили все изученные слова. Превосходно!';
+                title = getTranslation('review_completed_title', currentLang);
+                message = getTranslation('reviewed_all_words', currentLang);
             } else {
-                title = '🎉 Поздравляем!';
-                message = 'Вы завершили все задания на сегодня. Отличная работа!';
+                title = getTranslation('congratulations_title', currentLang);
+                message = getTranslation('completed_todays_tasks', currentLang);
             }
+            
+            const returnText = getTranslation('return_to_main', currentLang);
             
             document.querySelector('.container').innerHTML = `
                 <div class="no-words">
                     <h2>${title}</h2>
                     <p>${message}</p>
-                    <a href="dashboard.php" class="btn btn-primary">Вернуться на главную</a>
+                    <a href="dashboard.php" class="btn btn-primary">${returnText}</a>
                 </div>
             `;
         }

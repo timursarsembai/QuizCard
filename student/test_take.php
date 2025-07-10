@@ -4,6 +4,8 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
+require_once '../includes/init_language.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -61,7 +63,7 @@ if ($_POST && isset($_POST['submit_test'])) {
         header("Location: test_result.php?attempt_id=$attempt_id");
         exit();
     } else {
-        $error = "Ошибка при сохранении результатов теста";
+        $error = translate('test_save_error');
     }
 }
 
@@ -75,11 +77,11 @@ if (empty($questions)) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Прохождение теста</title>
+    <title><?php echo translate('test_taking_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -410,11 +412,14 @@ if (empty($questions)) {
             <div class="logo">
                 <h1>🧪 <?php echo htmlspecialchars($current_test['name']); ?></h1>
             </div>
-            <?php if ($current_test['time_limit']): ?>
-                <div class="test-timer" id="timer">
-                    ⏱️ <span id="timer-display"><?php echo $current_test['time_limit']; ?>:00</span>
-                </div>
-            <?php endif; ?>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <?php include 'language_switcher.php'; ?>
+                <?php if ($current_test['time_limit']): ?>
+                    <div class="test-timer" id="timer">
+                        ⏱️ <span id="timer-display"><?php echo $current_test['time_limit']; ?>:00</span>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </header>
 
@@ -425,17 +430,17 @@ if (empty($questions)) {
 
         <div class="test-header">
             <div class="test-title"><?php echo htmlspecialchars($current_test['name']); ?></div>
-            <p>Колода: <?php echo htmlspecialchars($current_deck['name']); ?></p>
+            <p data-translate-key="deck_label"><?php echo translate('deck_label'); ?> <?php echo htmlspecialchars($current_deck['name']); ?></p>
             
             <div class="test-info">
                 <div class="info-item">
                     <div class="info-number"><?php echo count($questions); ?></div>
-                    <div class="info-label">Вопросов</div>
+                    <div class="info-label" data-translate-key="questions_count_short"><?php echo translate('questions_count_short'); ?></div>
                 </div>
                 <?php if ($current_test['time_limit']): ?>
                     <div class="info-item">
                         <div class="info-number"><?php echo $current_test['time_limit']; ?></div>
-                        <div class="info-label">Минут</div>
+                        <div class="info-label" data-translate-key="minutes_short"><?php echo translate('minutes_short'); ?></div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -447,8 +452,8 @@ if (empty($questions)) {
 
             <div class="progress-section">
                 <div class="progress-header">
-                    <span class="progress-text">Прогресс: <span id="current-question">1</span> из <?php echo count($questions); ?></span>
-                    <span class="progress-text"><span id="answered-count">0</span> отвечено</span>
+                    <span class="progress-text" data-translate-key="progress_label"><?php echo translate('progress_label'); ?> <span id="current-question">1</span> <span data-translate-key="out_of"><?php echo translate('out_of'); ?></span> <?php echo count($questions); ?></span>
+                    <span class="progress-text"><span id="answered-count">0</span> <span data-translate-key="answered_label"><?php echo translate('answered_label'); ?></span></span>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
@@ -457,7 +462,7 @@ if (empty($questions)) {
 
             <?php foreach ($questions as $index => $question): ?>
                 <div class="question-card" id="question-<?php echo $index; ?>" style="<?php echo $index > 0 ? 'display: none;' : ''; ?>">
-                    <div class="question-number">Вопрос <?php echo $index + 1; ?></div>
+                    <div class="question-number" data-translate-key="question_number"><?php echo translate('question_number'); ?> <?php echo $index + 1; ?></div>
                     <div class="question-text"><?php echo htmlspecialchars($question['question']); ?></div>
                     
                     <div class="options">
@@ -489,30 +494,36 @@ if (empty($questions)) {
             <?php endforeach; ?>
 
             <div class="navigation">
-                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeQuestion(-1)" disabled>
-                    ← Предыдущий
+                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeQuestion(-1)" disabled data-translate-key="previous_button">
+                    <?php echo translate('previous_button'); ?>
                 </button>
-                <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeQuestion(1)">
-                    Следующий →
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeQuestion(1)" data-translate-key="next_button">
+                    <?php echo translate('next_button'); ?>
                 </button>
-                <button type="button" class="btn btn-success" id="finishBtn" onclick="finishTest()" style="display: none;">
-                    🏁 Завершить тест
+                <button type="button" class="btn btn-success" id="finishBtn" onclick="finishTest()" style="display: none;" data-translate-key="finish_test_button">
+                    <?php echo translate('finish_test_button'); ?>
                 </button>
             </div>
 
             <div class="submit-section" id="submitSection" style="display: none;">
-                <h3>🏁 Завершение теста</h3>
-                <p>Вы ответили на <span id="final-answered">0</span> из <?php echo count($questions); ?> вопросов.</p>
+                <h3 data-translate-key="test_completion_title"><?php echo translate('test_completion_title'); ?></h3>
+                <p data-translate-key="answered_questions_text"><?php echo translate('answered_questions_text'); ?> <span id="final-answered">0</span> <span data-translate-key="out_of"><?php echo translate('out_of'); ?></span> <?php echo count($questions); ?> <span data-translate-key="questions_count_short"><?php echo strtolower(translate('questions_count_short')); ?></span>.</p>
                 <div class="alert alert-warning">
-                    <strong>Внимание!</strong> После отправки теста вы не сможете изменить свои ответы.
+                    <strong data-translate-key="attention_warning"><?php echo translate('attention_warning'); ?></strong> <span data-translate-key="no_changes_after_submit"><?php echo translate('no_changes_after_submit'); ?></span>
                 </div>
-                <button type="submit" class="btn btn-success">📝 Отправить тест</button>
-                <button type="button" class="btn btn-secondary" onclick="hideSubmitSection()">❌ Продолжить тест</button>
+                <button type="submit" class="btn btn-success" data-translate-key="submit_test_button"><?php echo translate('submit_test_button'); ?></button>
+                <button type="button" class="btn btn-secondary" onclick="hideSubmitSection()" data-translate-key="continue_test_button"><?php echo translate('continue_test_button'); ?></button>
             </div>
         </form>
     </div>
 
     <script>
+        // Переводы для JavaScript
+        const jsTranslations = {
+            'time_up_alert': '<?php echo addslashes(translate('time_up_alert')); ?>',
+            'incomplete_test_confirm': '<?php echo addslashes(translate('incomplete_test_confirm')); ?>'
+        };
+
         let currentQuestion = 0;
         const totalQuestions = <?php echo count($questions); ?>;
         const timeLimit = <?php echo $current_test['time_limit'] ?: 0; ?>;
@@ -528,7 +539,7 @@ if (empty($questions)) {
                 
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
-                    alert('Время теста истекло! Тест будет автоматически отправлен.');
+                    alert(jsTranslations.time_up_alert);
                     document.getElementById('testForm').submit();
                 }
             }, 1000);
@@ -616,7 +627,11 @@ if (empty($questions)) {
             const answered = document.querySelectorAll('input[type="radio"]:checked').length;
             
             if (answered < totalQuestions) {
-                if (!confirm(`Вы ответили только на ${answered} из ${totalQuestions} вопросов. Неотвеченные вопросы будут засчитаны как неправильные. Продолжить?`)) {
+                const confirmMessage = jsTranslations.incomplete_test_confirm
+                    .replace('{answered}', answered)
+                    .replace('{total}', totalQuestions);
+                
+                if (!confirm(confirmMessage)) {
                     return;
                 }
             }

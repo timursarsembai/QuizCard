@@ -4,6 +4,8 @@ require_once '../config/database.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
+require_once '../includes/init_language.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -32,11 +34,11 @@ $studying_words = $studying_result['studying_count'];
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo getCurrentLanguage(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Панель ученика</title>
+    <title><?php echo translate('student_dashboard_title'); ?></title>
     <style>
         * {
             margin: 0;
@@ -380,8 +382,9 @@ $studying_words = $studying_result['studying_count'];
                 <h1>🎓 QuizCard</h1>
             </div>
             <div class="user-info">
-                <span>Привет, <?php echo htmlspecialchars($_SESSION['first_name']); ?>! 👋</span>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <?php include 'language_switcher.php'; ?>
+                <span data-translate-key="student_greeting"><?php echo translate('student_greeting'); ?></span> <?php echo htmlspecialchars($_SESSION['first_name']); ?><span data-translate-key="student_greeting_wave"><?php echo translate('student_greeting_wave'); ?></span>
+                <a href="../logout.php" class="btn" data-translate-key="logout"><?php echo translate('logout'); ?></a>
             </div>
         </div>
     </header>
@@ -390,73 +393,73 @@ $studying_words = $studying_result['studying_count'];
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo $statistics['total_words'] ?: 0; ?></div>
-                <div class="stat-label">Всего слов</div>
-                <div class="stat-description">в вашем словаре</div>
+                <div class="stat-label" data-translate-key="total_words_stat"><?php echo translate('total_words_stat'); ?></div>
+                <div class="stat-description" data-translate-key="total_words_desc"><?php echo translate('total_words_desc'); ?></div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-number"><?php echo $statistics['words_to_review'] ?: 0; ?></div>
-                <div class="stat-label">К изучению</div>
-                <div class="stat-description">готовы к повторению</div>
+                <div class="stat-label" data-translate-key="to_review_stat"><?php echo translate('to_review_stat'); ?></div>
+                <div class="stat-description" data-translate-key="to_review_desc"><?php echo translate('to_review_desc'); ?></div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-number"><?php echo $studying_words ?: 0; ?></div>
-                <div class="stat-label">На изучении</div>
-                <div class="stat-description">в процессе изучения</div>
+                <div class="stat-label" data-translate-key="studying_stat"><?php echo translate('studying_stat'); ?></div>
+                <div class="stat-description" data-translate-key="studying_desc"><?php echo translate('studying_desc'); ?></div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-number"><?php echo $statistics['total_repetitions'] ?: 0; ?></div>
-                <div class="stat-label">Повторений</div>
-                <div class="stat-description">выполнено всего</div>
+                <div class="stat-label" data-translate-key="repetitions_stat"><?php echo translate('repetitions_stat'); ?></div>
+                <div class="stat-description" data-translate-key="repetitions_desc"><?php echo translate('repetitions_desc'); ?></div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-number"><?php echo $statistics['total_decks'] ?: 0; ?></div>
-                <div class="stat-label">Колод</div>
-                <div class="stat-description">назначено преподавателем</div>
+                <div class="stat-label" data-translate-key="assigned_decks_stat"><?php echo translate('assigned_decks_stat'); ?></div>
+                <div class="stat-description" data-translate-key="assigned_decks_desc"><?php echo translate('assigned_decks_desc'); ?></div>
             </div>
         </div>
 
         <div class="action-cards">
             <div class="action-card">
                 <div class="action-icon">🎯</div>
-                <h3>Карточки для изучения</h3>
-                <p>Изучайте новые слова и повторяйте уже изученные с помощью интерактивных карточек. Система сама определит оптимальное время для повторения каждого слова.</p>
+                <h3 data-translate-key="flashcards_title"><?php echo translate('flashcards_title'); ?></h3>
+                <p data-translate-key="flashcards_desc"><?php echo translate('flashcards_desc'); ?></p>
                 
                 <?php if (count($words_for_review) > 0): ?>
-                    <a href="flashcards.php" class="btn btn-primary">Начать изучение (<?php echo count($words_for_review); ?> слов)</a>
+                    <a href="flashcards.php" class="btn btn-primary"><span data-translate-key="start_learning"><?php echo translate('start_learning'); ?></span> (<?php echo count($words_for_review); ?> <span data-translate-key="words_count"><?php echo translate('words_count'); ?></span>)</a>
                 <?php else: ?>
-                    <div style="color: #28a745; font-weight: 500;">Сегодня нет слов для повторения!</div>
+                    <div style="color: #28a745; font-weight: 500;" data-translate-key="no_words_today"><?php echo translate('no_words_today'); ?></div>
                 <?php endif; ?>
             </div>
 
             <div class="action-card">
                 <div class="action-icon">🧪</div>
-                <h3>Тесты по колодам</h3>
-                <p>Проверьте свои знания с помощью тестов. Получите оценку и увидьте детальную статистику по ошибкам.</p>
-                <a href="tests.php" class="btn btn-primary">Пройти тесты</a>
+                <h3 data-translate-key="tests_title"><?php echo translate('tests_title'); ?></h3>
+                <p data-translate-key="tests_desc"><?php echo translate('tests_desc'); ?></p>
+                <a href="tests.php" class="btn btn-primary" data-translate-key="take_tests"><?php echo translate('take_tests'); ?></a>
             </div>
 
             <div class="action-card">
                 <div class="action-icon">📚</div>
-                <h3>Мой словарь</h3>
-                <p>Просмотрите все слова в вашем словаре, отследите прогресс изучения и посмотрите статистику по каждому слову.</p>
-                <a href="vocabulary_view.php" class="btn btn-primary">Открыть словарь</a>
+                <h3 data-translate-key="vocabulary_title"><?php echo translate('vocabulary_title'); ?></h3>
+                <p data-translate-key="vocabulary_desc"><?php echo translate('vocabulary_desc'); ?></p>
+                <a href="vocabulary_view.php" class="btn btn-primary" data-translate-key="open_vocabulary"><?php echo translate('open_vocabulary'); ?></a>
             </div>
 
             <div class="action-card">
                 <div class="action-icon">📊</div>
-                <h3>Статистика обучения</h3>
-                <p>Отслеживайте свой прогресс, смотрите графики обучения и анализируйте эффективность запоминания слов.</p>
-                <a href="statistics.php" class="btn btn-primary">Посмотреть статистику</a>
+                <h3 data-translate-key="statistics_title"><?php echo translate('statistics_title'); ?></h3>
+                <p data-translate-key="statistics_desc"><?php echo translate('statistics_desc'); ?></p>
+                <a href="statistics.php" class="btn btn-primary" data-translate-key="view_statistics"><?php echo translate('view_statistics'); ?></a>
             </div>
         </div>
 
         <?php if (!empty($student_decks)): ?>
             <div class="card">
-                <h2>📚 Мои колоды</h2>
+                <h2 data-translate-key="my_decks_title"><?php echo translate('my_decks_title'); ?></h2>
                 <div class="decks-grid">                <?php foreach ($student_decks as $deck_item): 
                     // Найдем информацию о дневном лимите для этой колоды
                     $daily_limit_info = null;
@@ -476,21 +479,21 @@ $studying_words = $studying_result['studying_count'];
                         <div class="deck-stats">
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $deck_item['total_words'] ?: 0; ?></div>
-                                <div class="stat-label">Слов</div>
+                                <div class="stat-label" data-translate-key="deck_words_stat"><?php echo translate('deck_words_stat'); ?></div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo $deck_item['words_to_review'] ?: 0; ?></div>
-                                <div class="stat-label">К изучению</div>
+                                <div class="stat-label" data-translate-key="deck_to_review_stat"><?php echo translate('deck_to_review_stat'); ?></div>
                             </div>
                             <?php if ($daily_limit_info): ?>
                                 <div class="stat-item">
                                     <div class="stat-number"><?php echo $daily_limit_info['words_studied_today']; ?>/<?php echo $daily_limit_info['daily_limit']; ?></div>
-                                    <div class="stat-label">Сегодня</div>
+                                    <div class="stat-label" data-translate-key="deck_today_stat"><?php echo translate('deck_today_stat'); ?></div>
                                 </div>
                             <?php endif; ?>
                             <div class="stat-item">
                                 <div class="stat-number"><?php echo date('d.m', strtotime($deck_item['assigned_at'])); ?></div>
-                                <div class="stat-label">Назначено</div>
+                                <div class="stat-label" data-translate-key="deck_assigned_stat"><?php echo translate('deck_assigned_stat'); ?></div>
                             </div>
                         </div>
                         
@@ -500,27 +503,27 @@ $studying_words = $studying_result['studying_count'];
                                 $can_study = !$daily_limit_info || $daily_limit_info['can_study_more'] || $daily_limit_info['remaining_today'] > 0;
                                 ?>
                                 <a href="flashcards.php?deck_id=<?php echo $deck_item['id']; ?>" class="btn btn-primary">
-                                    📅 Изучать (<?php echo $deck_item['words_to_review']; ?> слов)
+                                    <span data-translate-key="study_deck"><?php echo translate('study_deck'); ?></span> (<?php echo $deck_item['words_to_review']; ?> <span data-translate-key="words_count"><?php echo translate('words_count'); ?></span>)
                                 </a>
                                 <?php if ($daily_limit_info && $daily_limit_info['remaining_today'] <= 0): ?>
-                                    <div style="color: #ffa500; font-size: 0.9rem; text-align: center; margin-top: 0.5rem;">
-                                        ⏳ Дневной лимит достигнут (повторения доступны)
+                                    <div style="color: #ffa500; font-size: 0.9rem; text-align: center; margin-top: 0.5rem;" data-translate-key="daily_limit_reached">
+                                        <?php echo translate('daily_limit_reached'); ?>
                                     </div>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <div style="color: #28a745; font-weight: 500; text-align: center; padding: 0.5rem;">
-                                    ✅ Колода изучена
+                                <div style="color: #28a745; font-weight: 500; text-align: center; padding: 0.5rem;" data-translate-key="deck_completed">
+                                    <?php echo translate('deck_completed'); ?>
                                 </div>
                             <?php endif; ?>
                             
                             <!-- Кнопки принудительного повторения -->
                             <a href="flashcards.php?deck_id=<?php echo $deck_item['id']; ?>&review_mode=today" 
-                               class="btn btn-secondary btn-small">
-                                🔄 Повторить сегодняшние
+                               class="btn btn-secondary btn-small" data-translate-key="review_today">
+                                <?php echo translate('review_today'); ?>
                             </a>
                             <a href="flashcards.php?deck_id=<?php echo $deck_item['id']; ?>&review_mode=all_studied" 
-                               class="btn btn-secondary btn-small">
-                                📖 Повторить все изученные
+                               class="btn btn-secondary btn-small" data-translate-key="review_all_studied">
+                                <?php echo translate('review_all_studied'); ?>
                             </a>
                         </div>
                     </div>
@@ -531,7 +534,7 @@ $studying_words = $studying_result['studying_count'];
 
         <?php if ($statistics['total_words'] > 0): ?>
             <div class="stat-card" style="margin-top: 2rem;">
-                <h3 style="color: #667eea; margin-bottom: 1rem;">Прогресс изучения</h3>
+                <h3 style="color: #667eea; margin-bottom: 1rem;" data-translate-key="learning_progress_title"><?php echo translate('learning_progress_title'); ?></h3>
                 <?php 
                 // Получаем количество изученных слов (с repetition_count >= 3)
                 $query = "SELECT COUNT(*) as learned_count FROM learning_progress WHERE student_id = :student_id AND repetition_count >= 3";
@@ -543,7 +546,7 @@ $studying_words = $studying_result['studying_count'];
                 
                 $progress_percent = ($learned_words / $statistics['total_words']) * 100;
                 ?>
-                <p>Изучено: <?php echo $learned_words; ?> из <?php echo $statistics['total_words']; ?> слов (<?php echo number_format($progress_percent, 1); ?>%)</p>
+                <p><span data-translate-key="learned_words"><?php echo translate('learned_words'); ?></span> <?php echo $learned_words; ?> <span data-translate-key="words_of"><?php echo translate('words_of'); ?></span> <?php echo $statistics['total_words']; ?> <span data-translate-key="words_count"><?php echo translate('words_count'); ?></span> (<?php echo number_format($progress_percent, 1); ?>%)</p>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: <?php echo $progress_percent; ?>%"></div>
                 </div>

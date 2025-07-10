@@ -5,6 +5,7 @@ require_once '../classes/User.php';
 require_once '../classes/Deck.php';
 require_once '../classes/Test.php';
 require_once '../classes/Vocabulary.php';
+require_once '../includes/translations.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -69,17 +70,17 @@ if ($_POST && isset($_POST['save_test'])) {
         
         if (!empty($questions_data)) {
             if ($test->updateTestQuestions($test_id, $questions_data)) {
-                $success = "Тест успешно сохранен!";
+                $success = $translations[$_SESSION['language'] ?? 'ru']['test_saved_success'] ?? "Тест успешно сохранен!";
                 // Обновляем данные теста
                 $current_test = $test->getTestById($test_id);
             } else {
-                $error = "Ошибка при сохранении вопросов";
+                $error = $translations[$_SESSION['language'] ?? 'ru']['questions_update_error'] ?? "Ошибка при сохранении вопросов";
             }
         } else {
-            $error = "Добавьте хотя бы один вопрос";
+            $error = $translations[$_SESSION['language'] ?? 'ru']['add_one_question_error'] ?? "Добавьте хотя бы один вопрос";
         }
     } else {
-        $error = "Ошибка при обновлении теста";
+        $error = $translations[$_SESSION['language'] ?? 'ru']['test_save_error'] ?? "Ошибка при обновлении теста";
     }
 }
 
@@ -88,11 +89,11 @@ if ($_POST && isset($_POST['generate_questions'])) {
     $questions_count = intval($_POST['questions_count']);
     if ($questions_count > 0) {
         if ($test->generateQuestionsForTest($test_id, $questions_count)) {
-            $success = "Вопросы успешно сгенерированы!";
+            $success = $translations[$_SESSION['language'] ?? 'ru']['questions_generated_success'] ?? "Вопросы успешно сгенерированы!";
             // Обновляем данные теста
             $current_test = $test->getTestById($test_id);
         } else {
-            $error = "Ошибка при генерации вопросов";
+            $error = $translations[$_SESSION['language'] ?? 'ru']['questions_generate_error'] ?? "Ошибка при генерации вопросов";
         }
     }
 }
@@ -107,7 +108,7 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - Редактирование теста</title>
+    <title data-translate-key="test_edit_title">QuizCard - Редактирование теста</title>
     <style>
         * {
             margin: 0;
@@ -398,24 +399,26 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>✏️ Редактирование теста</h1>
+                <h1 data-translate-key="test_edit_title">✏️ Редактирование теста</h1>
                 <div class="breadcrumb">
-                    <a href="decks.php">Колоды</a> → 
-                    <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>">Тесты</a> → 
-                    Редактирование
+                    <a href="decks.php" data-translate-key="test_edit_breadcrumb_decks">Колоды</a> → 
+                    <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" data-translate-key="test_edit_breadcrumb_tests">Тесты</a> → 
+                    <span data-translate-key="test_edit_breadcrumb_edit">Редактирование</span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn">← Назад</a>
-                <a href="../logout.php" class="btn">Выйти</a>
+                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn" data-translate-key="back_button">← Назад</a>
+                <a href="../logout.php" class="btn" data-translate-key="logout_button">Выйти</a>
             </div>
         </div>
     </header>
 
     <div class="container">
+        <?php include 'language_switcher.php'; ?>
+        
         <div class="test-info">
-            <h2>Тест: <?php echo htmlspecialchars($current_test['name']); ?></h2>
-            <p>Колода: <?php echo htmlspecialchars($current_deck['name']); ?></p>
+            <h2><span data-translate-key="test_info_prefix">Тест:</span> <?php echo htmlspecialchars($current_test['name']); ?></h2>
+            <p><span data-translate-key="deck_info_prefix">Колода:</span> <?php echo htmlspecialchars($current_deck['name']); ?></p>
         </div>
 
         <?php if ($success): ?>
@@ -429,70 +432,70 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($words); ?></div>
-                <div class="stat-label">Слов в колоде</div>
+                <div class="stat-label" data-translate-key="words_in_deck_stat">Слов в колоде</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($questions); ?></div>
-                <div class="stat-label">Вопросов в тесте</div>
+                <div class="stat-label" data-translate-key="questions_in_test_stat">Вопросов в тесте</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $current_test['time_limit'] ?: '∞'; ?></div>
-                <div class="stat-label">Минут на тест</div>
+                <div class="stat-label" data-translate-key="minutes_for_test_stat">Минут на тест</div>
             </div>
         </div>
 
         <?php if (empty($questions)): ?>
             <div class="generate-section">
-                <h3>🤖 Автогенерация вопросов</h3>
-                <p>Система может автоматически создать вопросы на основе слов из колоды. 
+                <h3 data-translate-key="autogeneration_title">🤖 Автогенерация вопросов</h3>
+                <p data-translate-key="autogeneration_description">Система может автоматически создать вопросы на основе слов из колоды. 
                    Вы сможете отредактировать их после генерации.</p>
                 <form method="POST" action="">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="questions_count">Количество вопросов:</label>
+                            <label for="questions_count" data-translate-key="questions_count_label">Количество вопросов:</label>
                             <input type="number" id="questions_count" name="questions_count" 
                                    min="1" max="<?php echo count($words); ?>" 
                                    value="<?php echo min(10, count($words)); ?>" required>
                         </div>
                     </div>
-                    <button type="submit" name="generate_questions" class="btn btn-info">🤖 Сгенерировать вопросы</button>
+                    <button type="submit" name="generate_questions" class="btn btn-info" data-translate-key="generate_questions_button">🤖 Сгенерировать вопросы</button>
                 </form>
             </div>
         <?php endif; ?>
 
         <form method="POST" action="">
             <div class="card">
-                <h2>Настройки теста</h2>
+                <h2 data-translate-key="test_settings_title">Настройки теста</h2>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="test_name">Название теста:</label>
+                        <label for="test_name" data-translate-key="test_name_label">Название теста:</label>
                         <input type="text" id="test_name" name="test_name" 
                                value="<?php echo htmlspecialchars($current_test['name']); ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="time_limit">Ограничение по времени (минуты):</label>
+                        <label for="time_limit" data-translate-key="time_limit_label">Ограничение по времени (минуты):</label>
                         <input type="number" id="time_limit" name="time_limit" 
                                min="1" max="60" value="<?php echo $current_test['time_limit']; ?>"
-                               placeholder="Оставьте пустым для неограниченного времени">
+                               data-translate-key="time_limit_placeholder" placeholder="Оставьте пустым для неограниченного времени">
                     </div>
                 </div>
             </div>
 
             <?php if (!empty($questions)): ?>
                 <div class="card">
-                    <h2>Вопросы теста</h2>
+                    <h2 data-translate-key="test_questions_title">Вопросы теста</h2>
                     <?php foreach ($questions as $index => $question): ?>
                         <div class="question-card">
                             <div class="question-header">
-                                <span class="question-number">Вопрос <?php echo $index + 1; ?></span>
+                                <span class="question-number"><span data-translate-key="question_prefix">Вопрос</span> <?php echo $index + 1; ?></span>
                                 <button type="button" class="btn btn-danger btn-sm" 
                                         onclick="removeQuestion(<?php echo $index; ?>)">🗑️</button>
                             </div>
                             
                             <div class="form-group">
-                                <label>Вопрос:</label>
+                                <label data-translate-key="question_label">Вопрос:</label>
                                 <textarea name="questions[<?php echo $index; ?>][question]" required
-                                          placeholder="Введите текст вопроса..."><?php echo htmlspecialchars($question['question']); ?></textarea>
+                                          data-translate-key="question_placeholder" placeholder="Введите текст вопроса..."><?php echo htmlspecialchars($question['question']); ?></textarea>
                             </div>
                             
                             <div class="options-grid">
@@ -519,7 +522,7 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
                             </div>
                             
                             <div class="form-group">
-                                <label>Правильный ответ:</label>
+                                <label data-translate-key="correct_answer_label">Правильный ответ:</label>
                                 <select name="questions[<?php echo $index; ?>][correct_answer]" class="correct-answer-select" required>
                                     <option value="A" <?php echo $question['correct_answer'] === 'A' ? 'selected' : ''; ?>>A</option>
                                     <option value="B" <?php echo $question['correct_answer'] === 'B' ? 'selected' : ''; ?>>B</option>
@@ -530,14 +533,14 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
                         </div>
                     <?php endforeach; ?>
                     
-                    <button type="button" class="btn btn-secondary" onclick="addQuestion()">➕ Добавить вопрос</button>
+                    <button type="button" class="btn btn-secondary" onclick="addQuestion()" data-translate-key="add_question_button">➕ Добавить вопрос</button>
                 </div>
             <?php endif; ?>
 
             <div class="form-actions">
-                <button type="submit" name="save_test" class="btn btn-primary">💾 Сохранить тест</button>
-                <a href="test_preview.php?test_id=<?php echo $test_id; ?>" class="btn btn-info">👁️ Предварительный просмотр</a>
-                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn btn-secondary">❌ Отмена</a>
+                <button type="submit" name="save_test" class="btn btn-primary" data-translate-key="save_test_button">💾 Сохранить тест</button>
+                <a href="test_preview.php?test_id=<?php echo $test_id; ?>" class="btn btn-info" data-translate-key="preview_test_button">👁️ Предварительный просмотр</a>
+                <a href="test_manager.php?deck_id=<?php echo $current_test['deck_id']; ?>" class="btn btn-secondary" data-translate-key="cancel_button">❌ Отмена</a>
             </div>
         </form>
     </div>
@@ -553,14 +556,14 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
             questionCard.className = 'question-card';
             questionCard.innerHTML = `
                 <div class="question-header">
-                    <span class="question-number">Вопрос ${questionIndex + 1}</span>
+                    <span class="question-number"><span data-translate-key="question_prefix">Вопрос</span> ${questionIndex + 1}</span>
                     <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(${questionIndex})">🗑️</button>
                 </div>
                 
                 <div class="form-group">
-                    <label>Вопрос:</label>
+                    <label data-translate-key="question_label">Вопрос:</label>
                     <textarea name="questions[${questionIndex}][question]" required
-                              placeholder="Введите текст вопроса..."></textarea>
+                              data-translate-key="question_placeholder" placeholder="Введите текст вопроса..."></textarea>
                 </div>
                 
                 <div class="options-grid">
@@ -583,7 +586,7 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
                 </div>
                 
                 <div class="form-group">
-                    <label>Правильный ответ:</label>
+                    <label data-translate-key="correct_answer_label">Правильный ответ:</label>
                     <select name="questions[${questionIndex}][correct_answer]" class="correct-answer-select" required>
                         <option value="A">A</option>
                         <option value="B">B</option>
@@ -599,7 +602,12 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
 
         function removeQuestion(index) {
             const questionCard = document.querySelector(`[onclick="removeQuestion(${index})"]`).closest('.question-card');
-            if (confirm('Вы уверены, что хотите удалить этот вопрос?')) {
+            // Получаем текст подтверждения из переводов
+            const confirmMessage = translations[currentLang] && translations[currentLang]['delete_question_confirm'] 
+                ? translations[currentLang]['delete_question_confirm'] 
+                : 'Вы уверены, что хотите удалить этот вопрос?';
+            
+            if (confirm(confirmMessage)) {
                 questionCard.remove();
                 updateQuestionNumbers();
             }
@@ -609,7 +617,10 @@ $words = $vocabulary->getVocabularyByDeck($current_test['deck_id']);
             const questionCards = document.querySelectorAll('.question-card');
             questionCards.forEach((card, index) => {
                 const numberSpan = card.querySelector('.question-number');
-                numberSpan.textContent = `Вопрос ${index + 1}`;
+                const questionText = translations[currentLang] && translations[currentLang]['question_prefix'] 
+                    ? translations[currentLang]['question_prefix'] 
+                    : 'Вопрос';
+                numberSpan.innerHTML = `<span data-translate-key="question_prefix">${questionText}</span> ${index + 1}`;
             });
         }
 
