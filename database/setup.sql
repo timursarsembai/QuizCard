@@ -47,6 +47,7 @@ CREATE TABLE vocabulary (
     foreign_word VARCHAR(255) NOT NULL,
     translation VARCHAR(255) NOT NULL,
     image_path VARCHAR(500) NULL,
+    audio_path VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
 );

@@ -88,6 +88,10 @@ if ($review_mode === 'today') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate-key="flashcards_page_title"><?php echo translate('flashcards_page_title'); ?></title>
+    
+    <!-- Подключение Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         * {
             margin: 0;
@@ -258,6 +262,53 @@ if ($review_mode === 'today') {
             border-radius: 10px;
             margin-bottom: 1rem;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Стили для аудиоплеера в карточках */
+        .card-audio {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-audio {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.2rem;
+            background: #667eea;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-audio:hover {
+            background: #667eead9;
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-audio.playing {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: rgba(76, 175, 80, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        .btn-audio i {
+            font-size: 1.1em;
         }
 
         .controls {
@@ -520,7 +571,8 @@ if ($review_mode === 'today') {
                 'reviewed_all_words': '<?php echo addslashes(translate_key('reviewed_all_words', 'kk')); ?>',
                 'congratulations_title': '<?php echo addslashes(translate_key('congratulations_title', 'kk')); ?>',
                 'completed_todays_tasks': '<?php echo addslashes(translate_key('completed_todays_tasks', 'kk')); ?>',
-                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'kk')); ?>'
+                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'kk')); ?>',
+                'play_audio': '<?php echo addslashes(translate_key('play_audio', 'kk')); ?>'
             },
             'ru': {
                 'review_completed_title': '<?php echo addslashes(translate_key('review_completed_title', 'ru')); ?>',
@@ -528,7 +580,8 @@ if ($review_mode === 'today') {
                 'reviewed_all_words': '<?php echo addslashes(translate_key('reviewed_all_words', 'ru')); ?>',
                 'congratulations_title': '<?php echo addslashes(translate_key('congratulations_title', 'ru')); ?>',
                 'completed_todays_tasks': '<?php echo addslashes(translate_key('completed_todays_tasks', 'ru')); ?>',
-                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'ru')); ?>'
+                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'ru')); ?>',
+                'play_audio': '<?php echo addslashes(translate_key('play_audio', 'ru')); ?>'
             },
             'en': {
                 'review_completed_title': '<?php echo addslashes(translate_key('review_completed_title', 'en')); ?>',
@@ -536,7 +589,8 @@ if ($review_mode === 'today') {
                 'reviewed_all_words': '<?php echo addslashes(translate_key('reviewed_all_words', 'en')); ?>',
                 'congratulations_title': '<?php echo addslashes(translate_key('congratulations_title', 'en')); ?>',
                 'completed_todays_tasks': '<?php echo addslashes(translate_key('completed_todays_tasks', 'en')); ?>',
-                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'en')); ?>'
+                'return_to_main': '<?php echo addslashes(translate_key('return_to_main', 'en')); ?>',
+                'play_audio': '<?php echo addslashes(translate_key('play_audio', 'en')); ?>'
             }
         };
 
@@ -562,6 +616,10 @@ if ($review_mode === 'today') {
             // Сбрасываем поворот карточки
             document.getElementById('flashcard').classList.remove('flipped');
             
+            // Получаем текущий язык для переводов
+            const currentLang = localStorage.getItem('selectedLanguage') || '<?php echo getCurrentLanguage(); ?>';
+            const playAudioText = getTranslation('play_audio', currentLang);
+            
             // Случайно выбираем, что показать сначала
             const showForeignFirst = Math.random() < 0.5;
             
@@ -573,6 +631,17 @@ if ($review_mode === 'today') {
                 frontContent.innerHTML = `
                     <h2>${escapeHtml(word.foreign_word)}</h2>
                     ${word.image_path ? `<img src="../${escapeHtml(word.image_path)}" alt="Изображение" class="card-image">` : ''}
+                    ${word.audio_path ? `
+                        <div class="card-audio">
+                            <button type="button" class="audio-play-btn btn-audio" 
+                                    data-audio-path="../${escapeHtml(word.audio_path)}"
+                                    data-word-id="${word.id}"
+                                    title="${playAudioText}">
+                                <i class="fas fa-volume-up"></i>
+                                <span data-translate-key="play_audio">${playAudioText}</span>
+                            </button>
+                        </div>
+                    ` : ''}
                 `;
                 backContent.innerHTML = `
                     <h2>${escapeHtml(word.translation)}</h2>
@@ -585,6 +654,17 @@ if ($review_mode === 'today') {
                 `;
                 backContent.innerHTML = `
                     <h2>${escapeHtml(word.foreign_word)}</h2>
+                    ${word.audio_path ? `
+                        <div class="card-audio">
+                            <button type="button" class="audio-play-btn btn-audio" 
+                                    data-audio-path="../${escapeHtml(word.audio_path)}"
+                                    data-word-id="${word.id}"
+                                    title="${playAudioText}">
+                                <i class="fas fa-volume-up"></i>
+                                <span data-translate-key="play_audio">${playAudioText}</span>
+                            </button>
+                        </div>
+                    ` : ''}
                 `;
             }
         }
@@ -596,7 +676,12 @@ if ($review_mode === 'today') {
         }
 
         // Обработчик клика по карточке
-        document.getElementById('flashcard').addEventListener('click', function() {
+        document.getElementById('flashcard').addEventListener('click', function(event) {
+            // Проверяем, был ли клик по кнопке аудио или её дочерним элементам
+            if (event.target.closest('.audio-play-btn')) {
+                return; // Не переворачиваем карточку при клике на аудио
+            }
+            
             this.classList.toggle('flipped');
             isFlipped = !isFlipped;
         });
@@ -713,6 +798,17 @@ if ($review_mode === 'today') {
                 rateWord('easy');
             }
         });
+
+        // Добавляем обработчик для обновления аудио кнопок при смене языка
+        document.addEventListener('languageChanged', function(e) {
+            // Перезагружаем текущую карточку для обновления переводов
+            if (currentWord) {
+                loadCard(currentWord);
+            }
+        });
     </script>
+    
+    <!-- Подключение JavaScript для аудиоплеера -->
+    <script src="../js/audio-player.js"></script>
 </body>
 </html>

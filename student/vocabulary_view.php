@@ -65,7 +65,11 @@ switch ($sort_by) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizCard - <?php echo translate('my_vocabulary_title'); ?></title>
+    <title data-translate-key="vocabulary_view_title"><?php echo translate('vocabulary_view_title'); ?></title>
+    
+    <!-- Подключение Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         * {
             margin: 0;
@@ -278,6 +282,50 @@ switch ($sort_by) {
             object-fit: cover;
             border-radius: 10px;
             margin-bottom: 1rem;
+        }
+
+        /* Стили для аудиоплеера в словаре */
+        .word-audio {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-audio-compact {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-audio-compact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-audio-compact.playing {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            animation: pulse-audio 1.5s infinite;
+        }
+
+        @keyframes pulse-audio {
+            0% { box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 3px 20px rgba(76, 175, 80, 0.6); }
+            100% { box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4); }
+        }
+
+        .btn-audio-compact i {
+            font-size: 1em;
         }
 
         .word-stats {
@@ -512,6 +560,18 @@ switch ($sort_by) {
                                      alt="Изображение" class="word-image">
                             <?php endif; ?>
                             
+                            <?php if ($word['audio_path']): ?>
+                                <div class="word-audio">
+                                    <button type="button" class="audio-play-btn btn-audio-compact" 
+                                            data-audio-path="../<?php echo htmlspecialchars($word['audio_path']); ?>"
+                                            data-word-id="<?php echo $word['id']; ?>"
+                                            title="<?php echo translate('play_audio'); ?>">
+                                        <i class="fas fa-volume-up"></i>
+                                        <span data-translate-key="play_audio"><?php echo translate('play_audio'); ?></span>
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                            
                             <div class="word-stats">
                                 <div class="stat-item">
                                     <div class="stat-value"><?php echo $word['total_attempts'] ?: 0; ?></div>
@@ -715,5 +775,8 @@ switch ($sort_by) {
             };
         });
     </script>
+    
+    <!-- Подключение JavaScript для аудиоплеера -->
+    <script src="../js/audio-player.js"></script>
 </body>
 </html>

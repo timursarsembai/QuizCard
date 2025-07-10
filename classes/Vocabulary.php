@@ -6,15 +6,16 @@ class Vocabulary {
         $this->conn = $db;
     }
     
-    public function addWord($deck_id, $foreign_word, $translation, $image_path = null) {
-        $query = "INSERT INTO vocabulary (deck_id, foreign_word, translation, image_path) 
-                  VALUES (:deck_id, :foreign_word, :translation, :image_path)";
+    public function addWord($deck_id, $foreign_word, $translation, $image_path = null, $audio_path = null) {
+        $query = "INSERT INTO vocabulary (deck_id, foreign_word, translation, image_path, audio_path) 
+                  VALUES (:deck_id, :foreign_word, :translation, :image_path, :audio_path)";
         $stmt = $this->conn->prepare($query);
         
         $stmt->bindParam(':deck_id', $deck_id);
         $stmt->bindParam(':foreign_word', $foreign_word);
         $stmt->bindParam(':translation', $translation);
         $stmt->bindParam(':image_path', $image_path);
+        $stmt->bindParam(':audio_path', $audio_path);
         
         if ($stmt->execute()) {
             $vocabulary_id = $this->conn->lastInsertId();
@@ -216,13 +217,14 @@ class Vocabulary {
         return $stmt->execute();
     }
     
-    public function updateWord($vocabulary_id, $foreign_word, $translation, $image_path, $teacher_id) {
+    public function updateWord($vocabulary_id, $foreign_word, $translation, $image_path, $audio_path, $teacher_id) {
         // Проверяем, что слово принадлежит колоде данного преподавателя
         $query = "UPDATE vocabulary v
                   INNER JOIN decks d ON v.deck_id = d.id
                   SET v.foreign_word = :foreign_word, 
                       v.translation = :translation, 
-                      v.image_path = :image_path
+                      v.image_path = :image_path,
+                      v.audio_path = :audio_path
                   WHERE v.id = :vocabulary_id AND d.teacher_id = :teacher_id";
         
         $stmt = $this->conn->prepare($query);
@@ -230,6 +232,7 @@ class Vocabulary {
         $stmt->bindParam(':foreign_word', $foreign_word);
         $stmt->bindParam(':translation', $translation);
         $stmt->bindParam(':image_path', $image_path);
+        $stmt->bindParam(':audio_path', $audio_path);
         $stmt->bindParam(':teacher_id', $teacher_id);
         
         return $stmt->execute();
@@ -444,6 +447,90 @@ class Vocabulary {
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['average_progress'] ?? 0;
+    }
+
+    /**
+     * Получить информацию об аудиофайле для словарного слова
+     * @param int $vocabulary_id ID словарного слова
+     * @return string|null Путь к аудиофайлу или null
+     */
+    public function getAudioPath($vocabulary_id) {
+        $query = "SELECT audio_path FROM vocabulary WHERE id = :vocabulary_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':vocabulary_id', $vocabulary_id);
+        $stmt->execute();
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['audio_path'] : null;
+    }
+
+    /**
+     * Обновить только аудиофайл для словарного слова
+     * @param int $vocabulary_id ID словарного слова
+     * @param string|null $audio_path Путь к аудиофайлу
+     * @param int $teacher_id ID преподавателя
+     * @return bool Результат обновления
+     */
+    public function updateAudioPath($vocabulary_id, $audio_path, $teacher_id) {
+        $query = "UPDATE vocabulary v
+                  INNER JOIN decks d ON v.deck_id = d.id
+                  SET v.audio_path = :audio_path
+                  WHERE v.id = :vocabulary_id AND d.teacher_id = :teacher_id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':vocabulary_id', $vocabulary_id);
+        $stmt->bindParam(':audio_path', $audio_path);
+        $stmt->bindParam(':teacher_id', $teacher_id);
+        
+        return $stmt->execute();
+    }
+
+    /**
+     * Удалить аудиофайл для словарного слова
+     * @param int $vocabulary_id ID словарного слова
+     * @param int $teacher_id ID преподавателя
+     * @return bool Результат удаления
+     */
+    public function removeAudio($vocabulary_id, $teacher_id) {
+        return $this->updateAudioPath($vocabulary_id, null, $teacher_id);
+    }
+
+    /**
+     * Получить все слова с аудиофайлами для колоды
+     * @param int $deck_id ID колоды
+     * @return array Массив слов с аудиофайлами
+     */
+    public function getWordsWithAudio($deck_id) {
+        $query = "SELECT v.*, COUNT(lp.student_id) as assigned_students
+                  FROM vocabulary v
+                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id
+                  WHERE v.deck_id = :deck_id AND v.audio_path IS NOT NULL AND v.audio_path != ''
+                  GROUP BY v.id
+                  ORDER BY v.created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':deck_id', $deck_id);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Получить статистику по аудиофайлам в колоде
+     * @param int $deck_id ID колоды
+     * @return array Статистика
+     */
+    public function getAudioStatistics($deck_id) {
+        $query = "SELECT 
+                    COUNT(*) as total_words,
+                    COUNT(audio_path) as words_with_audio,
+                    (COUNT(audio_path) / COUNT(*)) * 100 as audio_coverage_percent
+                  FROM vocabulary 
+                  WHERE deck_id = :deck_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':deck_id', $deck_id);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
 ?>

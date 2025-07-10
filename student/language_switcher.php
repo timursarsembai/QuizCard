@@ -86,6 +86,11 @@
                 
                 // Устанавливаем язык HTML элемента
                 document.documentElement.lang = lang;
+                
+                // Генерируем событие для других скриптов на странице
+                document.dispatchEvent(new CustomEvent('languageChanged', { 
+                    detail: { language: lang } 
+                }));
             } else {
                 console.error('Failed to sync language with server');
                 // Откатываем изменения при ошибке
@@ -121,6 +126,14 @@
                 } else {
                     element.textContent = langTranslations[key];
                 }
+            }
+        });
+
+        // Специальная обработка для кнопок аудио - обновляем title
+        document.querySelectorAll('.audio-play-btn').forEach(button => {
+            const langTranslations = translations[currentLang] || translations['ru'];
+            if (langTranslations && langTranslations['play_audio']) {
+                button.setAttribute('title', langTranslations['play_audio']);
             }
         });
 

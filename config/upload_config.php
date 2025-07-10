@@ -3,6 +3,8 @@
  * Конфигурация для загрузки файлов
  */
 
+require_once 'audio_config.php';
+
 class UploadConfig {
     // Настройки для изображений словаря
     const VOCABULARY_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB в байтах
@@ -98,6 +100,33 @@ class UploadConfig {
             return @unlink('../' . $image_path);
         }
         return true;
+    }
+    
+    /**
+     * Валидация аудиофайла (делегирует в AudioConfig)
+     * @param array $file Массив $_FILES
+     * @return array Массив ошибок (пустой, если нет ошибок)
+     */
+    public static function validateAudio($file) {
+        return AudioConfig::validateAudio($file);
+    }
+    
+    /**
+     * Генерация уникального имени файла для аудио (делегирует в AudioConfig)
+     * @param string $original_filename Оригинальное имя файла
+     * @return string Новое имя файла
+     */
+    public static function generateAudioFilename($original_filename) {
+        return AudioConfig::generateAudioFilename($original_filename);
+    }
+    
+    /**
+     * Удаление старого аудиофайла (делегирует в AudioConfig)
+     * @param string $audio_path Путь к аудиофайлу
+     * @return bool Результат удаления
+     */
+    public static function deleteOldAudio($audio_path) {
+        return AudioConfig::deleteOldAudio($audio_path);
     }
 }
 ?>

@@ -2,9 +2,11 @@
 session_start();
 require_once '../config/database.php';
 require_once '../config/upload_config.php';
+require_once '../config/audio_config.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
+require_once '../classes/AudioProcessor.php';
 require_once '../includes/translations.php';
 
 $database = new Database();
@@ -12,6 +14,7 @@ $db = $database->getConnection();
 $user = new User($db);
 $vocabulary = new Vocabulary($db);
 $deck = new Deck($db);
+$audioProcessor = new AudioProcessor();
 
 if (!$user->isLoggedIn() || $user->getRole() !== 'teacher') {
     header("Location: ../index.php");
@@ -82,6 +85,7 @@ if ($_POST && isset($_POST['add_word'])) {
     $foreign_word = trim($_POST['foreign_word']);
     $translation = trim($_POST['translation']);
     $image_path = null;
+    $audio_path = null;
     
     // Обработка загрузки изображения
     if ($_FILES['image']['size'] > 0) {
@@ -108,9 +112,20 @@ if ($_POST && isset($_POST['add_word'])) {
         }
     }
     
-    // Добавляем слово только если нет ошибок с изображением
+    // Обработка загрузки аудиофайла
+    if (!$error && $_FILES['audio']['size'] > 0) {
+        $audio_result = $audioProcessor->processAudioUpload($_FILES['audio']);
+        
+        if (!$audio_result['success']) {
+            $error = implode('<br>', $audio_result['errors']);
+        } else {
+            $audio_path = $audio_result['audio_path'];
+        }
+    }
+    
+    // Добавляем слово только если нет ошибок
     if (!$error) {
-        if ($vocabulary->addWord($deck_id, $foreign_word, $translation, $image_path)) {
+        if ($vocabulary->addWord($deck_id, $foreign_word, $translation, $image_path, $audio_path)) {
             $success = "Слово успешно добавлено!";
         } else {
             $error = "Ошибка при добавлении слова";
@@ -124,7 +139,9 @@ if ($_POST && isset($_POST['edit_word'])) {
     $foreign_word = trim($_POST['foreign_word']);
     $translation = trim($_POST['translation']);
     $current_image = $_POST['current_image'] ?? '';
+    $current_audio = $_POST['current_audio'] ?? '';
     $image_path = $current_image; // По умолчанию оставляем текущее изображение
+    $audio_path = $current_audio; // По умолчанию оставляем текущее аудио
     
     // Обработка загрузки нового изображения
     if ($_FILES['image']['size'] > 0) {
@@ -153,9 +170,24 @@ if ($_POST && isset($_POST['edit_word'])) {
         }
     }
     
-    // Обновляем слово только если нет ошибок с изображением
+    // Обработка загрузки нового аудиофайла
+    if (!$error && $_FILES['audio']['size'] > 0) {
+        $audio_result = $audioProcessor->processAudioUpload($_FILES['audio']);
+        
+        if (!$audio_result['success']) {
+            $error = implode('<br>', $audio_result['errors']);
+        } else {
+            // Удаляем старый аудиофайл если он был
+            if ($current_audio) {
+                $audioProcessor->deleteAudio($current_audio);
+            }
+            $audio_path = $audio_result['audio_path'];
+        }
+    }
+    
+    // Обновляем слово только если нет ошибок
     if (!$error) {
-        if ($vocabulary->updateWord($word_id, $foreign_word, $translation, $image_path, $teacher_id)) {
+        if ($vocabulary->updateWord($word_id, $foreign_word, $translation, $image_path, $audio_path, $teacher_id)) {
             $success = "Слово успешно обновлено!";
         } else {
             $error = "Ошибка при обновлении слова";
@@ -761,6 +793,16 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                             • <span data-translate-key="image_formats_constraint">Форматы: JPG, PNG, GIF, WebP</span>
                         </small>
                     </div>
+                    <div class="form-group">
+                        <label for="audio" data-translate-key="audio_label">Аудиофайл (опционально):</label>
+                        <input type="file" id="audio" name="audio" accept="audio/mp3,audio/wav,audio/ogg,audio/mpeg">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 0.5rem;">
+                            <strong data-translate-key="audio_constraints_title">Ограничения:</strong><br>
+                            • <span data-translate-key="audio_max_size_constraint">Максимальный размер: 3MB</span><br>
+                            • <span data-translate-key="audio_duration_constraint">Максимальная длительность: 30 секунд</span><br>
+                            • <span data-translate-key="audio_formats_constraint">Форматы: MP3, WAV, OGG</span>
+                        </small>
+                    </div>
                 </div>
                 <button type="submit" name="add_word" class="btn btn-primary" data-translate-key="add_word_button">Добавить слово</button>
             </form>
@@ -777,6 +819,7 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                             <th data-translate-key="table_foreign_word">Изучаемое слово</th>
                             <th data-translate-key="table_translation">Перевод</th>
                             <th data-translate-key="table_image">Изображение</th>
+                            <th data-translate-key="table_audio">Аудио</th>
                             <th data-translate-key="table_assigned_students">Назначено ученикам</th>
                             <th data-translate-key="table_actions">Действия</th>
                         </tr>
@@ -813,6 +856,30 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                                                     title="Добавить изображение"
                                                     data-translate-key="add_image_button">
                                                 ✏️ Добавить фото
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="audio-container" style="position: relative; display: inline-block;">
+                                        <?php if ($word['audio_path']): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-primary audio-play-btn" 
+                                                    data-audio-path="../<?php echo htmlspecialchars($word['audio_path']); ?>"
+                                                    data-word-id="<?php echo $word['id']; ?>"
+                                                    title="Воспроизвести аудио">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                    onclick="showAudioUpload(<?php echo $word['id']; ?>)" 
+                                                    title="Изменить аудио">
+                                                ✏️
+                                            </button>
+                                        <?php else: ?>
+                                            <button type="button" class="btn btn-sm btn-outline" 
+                                                    onclick="showAudioUpload(<?php echo $word['id']; ?>)" 
+                                                    title="Добавить аудиофайл"
+                                                    data-translate-key="add_audio_button">
+                                                🎵 Добавить аудио
                                             </button>
                                         <?php endif; ?>
                                     </div>
@@ -883,7 +950,48 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                 </form>
             </div>
         </div>
+        
+        <!-- Модальное окно для загрузки аудиофайла -->
+        <div id="audioModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeAudioModal()">&times;</span>
+                <h3 data-translate-key="change_audio_title">Изменить аудиофайл</h3>
+                <form id="audioForm" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" id="audioWordId" name="word_id" value="">
+                    <input type="hidden" name="current_audio" id="currentAudioPath" value="">
+                    <input type="hidden" name="current_image" id="audioFormImagePath" value="">
+                    <input type="hidden" name="foreign_word" id="audioFormForeignWord" value="">
+                    <input type="hidden" name="translation" id="audioFormTranslation" value="">
+                    <input type="hidden" name="edit_word" value="1">
+                    
+                    <div class="form-group audio-upload-container">
+                        <label for="newAudio" data-translate-key="select_new_audio">Выберите новый аудиофайл:</label>
+                        <input type="file" id="newAudio" name="audio" accept="audio/mp3,audio/wav,audio/ogg,audio/mpeg" required>
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 0.5rem;">
+                            <strong data-translate-key="audio_constraints_title">Ограничения:</strong><br>
+                            • <span data-translate-key="audio_max_size_constraint">Максимальный размер: 3MB</span><br>
+                            • <span data-translate-key="audio_duration_constraint">Максимальная длительность: 30 секунд</span><br>
+                            • <span data-translate-key="audio_formats_constraint">Форматы: MP3, WAV, OGG</span>
+                        </small>
+                        <div class="audio-preview-container" style="display: none;"></div>
+                        <div class="audio-error-container" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" data-translate-key="upload_button">📤 Загрузить</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeAudioModal()" data-translate-key="cancel_button">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <!-- Подключение Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Подключение JavaScript для аудио -->
+    <script src="../js/audio-player.js"></script>
+    <script src="../js/audio-upload.js"></script>
 
     <script>
         // Переменные для работы со страницей (translations и currentLang уже объявлены в language_switcher.php)
@@ -1090,6 +1198,60 @@ $assigned_student_ids = array_column($assigned_students, 'id');
             const modal = document.getElementById('imageModal');
             if (event.target === modal) {
                 closeImageModal();
+            }
+        }
+
+        // === ФУНКЦИИ ДЛЯ РАБОТЫ С АУДИО ===
+        
+        // Показать модальное окно для загрузки аудио
+        function showAudioUpload(wordId) {
+            const word = wordsData[wordId];
+            if (!word) return;
+
+            document.getElementById('audioWordId').value = wordId;
+            document.getElementById('currentAudioPath').value = word.audio_path || '';
+            document.getElementById('audioFormImagePath').value = word.image_path || '';
+            document.getElementById('audioFormForeignWord').value = word.foreign_word;
+            document.getElementById('audioFormTranslation').value = word.translation;
+            
+            // Очищаем предыдущий выбор файла
+            document.getElementById('newAudio').value = '';
+            
+            // Очищаем предпросмотр и ошибки
+            const previewContainer = document.querySelector('#audioModal .audio-preview-container');
+            const errorContainer = document.querySelector('#audioModal .audio-error-container');
+            if (previewContainer) {
+                previewContainer.innerHTML = '';
+                previewContainer.style.display = 'none';
+            }
+            if (errorContainer) {
+                errorContainer.innerHTML = '';
+                errorContainer.style.display = 'none';
+            }
+            
+            document.getElementById('audioModal').style.display = 'block';
+        }
+
+        // Закрыть модальное окно для аудио
+        function closeAudioModal() {
+            document.getElementById('audioModal').style.display = 'none';
+            
+            // Останавливаем предварительное воспроизведение если есть
+            if (window.audioUploader && window.audioUploader.previewAudio) {
+                window.audioUploader.previewAudio.pause();
+            }
+        }
+
+        // Обработка клика вне модального окна для аудио
+        window.onclick = function(event) {
+            const imageModal = document.getElementById('imageModal');
+            const audioModal = document.getElementById('audioModal');
+            
+            if (event.target == imageModal) {
+                closeImageModal();
+            }
+            if (event.target == audioModal) {
+                closeAudioModal();
             }
         }
 

@@ -704,5 +704,27 @@ return [
     'image_constraints_title' => 'Constraints:',
     'image_max_size_constraint' => 'Maximum size: 5MB',
     'image_formats_constraint' => 'Formats: JPG, PNG, GIF, WebP',
+    
+    // Audio Upload and Player
+    'audio_label' => 'Audio File',
+    'audio_constraints_title' => 'Constraints:',
+    'audio_max_size_constraint' => 'Maximum size: 3MB',
+    'audio_duration_constraint' => 'Maximum duration: 30 seconds',
+    'audio_formats_constraint' => 'Formats: MP3, WAV, OGG',
+    'table_audio' => 'Audio',
+    'add_audio_button' => '🎵 Add Audio',
+    'change_audio_title' => 'Change Audio File',
+    'select_new_audio' => 'Select new audio file:',
+    'audio_max_size_error' => 'Audio file size must not exceed {max_size}MB. Current size: {current_size}MB',
+    'audio_format_error' => 'Invalid audio file format. Allowed: {allowed_formats}',
+    'audio_mime_type_error' => 'Invalid file type. Please upload only audio files in MP3, WAV or OGG formats.',
+    'audio_duration_error' => 'Audio file duration must not exceed {max_duration} seconds. Current duration: {current_duration} seconds',
+    'audio_upload_error' => 'Error uploading audio file.',
+    'audio_directory_error' => 'Error creating audio files directory.',
+    'play_audio' => 'Play Audio',
+    'pause_audio' => 'Pause Audio',
+    'audio_loading' => 'Loading audio...',
+    'audio_error' => 'Audio playback error',
+    'audio_not_found' => 'Audio file not found'
 ];
 ?>
