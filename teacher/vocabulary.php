@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once '../config/upload_config.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
@@ -84,24 +85,36 @@ if ($_POST && isset($_POST['add_word'])) {
     
     // Обработка загрузки изображения
     if ($_FILES['image']['size'] > 0) {
-        $upload_dir = '../uploads/vocabulary/';
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
+        // Валидация изображения
+        $validation_errors = UploadConfig::validateVocabularyImage($_FILES['image']);
         
-        $file_extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $new_filename = 'vocab_' . time() . '_' . uniqid() . '.' . $file_extension;
-        $upload_path = $upload_dir . $new_filename;
-        
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-            $image_path = 'uploads/vocabulary/' . $new_filename;
+        if (!empty($validation_errors)) {
+            $error = implode('<br>', $validation_errors);
+        } else {
+            $upload_dir = UploadConfig::VOCABULARY_UPLOAD_DIR;
+            
+            if (UploadConfig::ensureUploadDirectory($upload_dir)) {
+                $new_filename = UploadConfig::generateVocabularyImageFilename($_FILES['image']['name']);
+                $upload_path = $upload_dir . $new_filename;
+                
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
+                    $image_path = UploadConfig::VOCABULARY_UPLOAD_PATH . $new_filename;
+                } else {
+                    $error = "Ошибка при загрузке изображения.";
+                }
+            } else {
+                $error = "Ошибка при создании директории для загрузки.";
+            }
         }
     }
     
-    if ($vocabulary->addWord($deck_id, $foreign_word, $translation, $image_path)) {
-        $success = "Слово успешно добавлено!";
-    } else {
-        $error = "Ошибка при добавлении слова";
+    // Добавляем слово только если нет ошибок с изображением
+    if (!$error) {
+        if ($vocabulary->addWord($deck_id, $foreign_word, $translation, $image_path)) {
+            $success = "Слово успешно добавлено!";
+        } else {
+            $error = "Ошибка при добавлении слова";
+        }
     }
 }
 
@@ -115,32 +128,38 @@ if ($_POST && isset($_POST['edit_word'])) {
     
     // Обработка загрузки нового изображения
     if ($_FILES['image']['size'] > 0) {
-        $upload_dir = '../uploads/vocabulary/';
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
+        // Валидация изображения
+        $validation_errors = UploadConfig::validateVocabularyImage($_FILES['image']);
         
-        $file_extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        
-        if (in_array($file_extension, $allowed_extensions)) {
-            $new_filename = 'vocab_' . time() . '_' . uniqid() . '.' . $file_extension;
-            $upload_path = $upload_dir . $new_filename;
+        if (!empty($validation_errors)) {
+            $error = implode('<br>', $validation_errors);
+        } else {
+            $upload_dir = UploadConfig::VOCABULARY_UPLOAD_DIR;
             
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                // Удаляем старое изображение если оно было
-                if ($current_image && file_exists('../' . $current_image)) {
-                    @unlink('../' . $current_image);
+            if (UploadConfig::ensureUploadDirectory($upload_dir)) {
+                $new_filename = UploadConfig::generateVocabularyImageFilename($_FILES['image']['name']);
+                $upload_path = $upload_dir . $new_filename;
+                
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
+                    // Удаляем старое изображение если оно было
+                    UploadConfig::deleteOldImage($current_image);
+                    $image_path = UploadConfig::VOCABULARY_UPLOAD_PATH . $new_filename;
+                } else {
+                    $error = "Ошибка при загрузке изображения.";
                 }
-                $image_path = 'uploads/vocabulary/' . $new_filename;
+            } else {
+                $error = "Ошибка при создании директории для загрузки.";
             }
         }
     }
     
-    if ($vocabulary->updateWord($word_id, $foreign_word, $translation, $image_path, $teacher_id)) {
-        $success = "Слово успешно обновлено!";
-    } else {
-        $error = "Ошибка при обновлении слова";
+    // Обновляем слово только если нет ошибок с изображением
+    if (!$error) {
+        if ($vocabulary->updateWord($word_id, $foreign_word, $translation, $image_path, $teacher_id)) {
+            $success = "Слово успешно обновлено!";
+        } else {
+            $error = "Ошибка при обновлении слова";
+        }
     }
 }
 
@@ -228,7 +247,7 @@ $assigned_student_ids = array_column($assigned_students, 'id');
 
         .btn {
             padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.2);
+            background: rgb(102 126 234);
             color: white;
             text-decoration: none;
             border-radius: 5px;
@@ -239,7 +258,15 @@ $assigned_student_ids = array_column($assigned_students, 'id');
         }
 
         .btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgb(53 86 233);
+        }
+
+        [data-translate-key="back_button"], [data-translate-key="nav_logout"] {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-translate-key="back_button"]:hover, [data-translate-key="nav_logout"]:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .btn-primary {
@@ -727,7 +754,12 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                     </div>
                     <div class="form-group">
                         <label for="image" data-translate-key="image_label">Изображение (опционально):</label>
-                        <input type="file" id="image" name="image" accept="image/*">
+                        <input type="file" id="image" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 0.5rem;">
+                            <strong data-translate-key="image_constraints_title">Ограничения:</strong><br>
+                            • <span data-translate-key="image_max_size_constraint">Максимальный размер: 5MB</span><br>
+                            • <span data-translate-key="image_formats_constraint">Форматы: JPG, PNG, GIF, WebP</span>
+                        </small>
                     </div>
                 </div>
                 <button type="submit" name="add_word" class="btn btn-primary" data-translate-key="add_word_button">Добавить слово</button>
@@ -836,8 +868,12 @@ $assigned_student_ids = array_column($assigned_students, 'id');
                     
                     <div class="form-group">
                         <label for="newImage" data-translate-key="select_new_image">Выберите новое изображение:</label>
-                        <input type="file" id="newImage" name="image" accept="image/*" required>
-                        <small data-translate-key="supported_formats">Поддерживаемые форматы: JPG, PNG, GIF, WebP</small>
+                        <input type="file" id="newImage" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" required>
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 0.5rem;">
+                            <strong data-translate-key="image_constraints_title">Ограничения:</strong><br>
+                            • <span data-translate-key="image_max_size_constraint">Максимальный размер: 5MB</span><br>
+                            • <span data-translate-key="image_formats_constraint">Форматы: JPG, PNG, GIF, WebP</span>
+                        </small>
                     </div>
                     
                     <div class="form-actions">
@@ -850,8 +886,77 @@ $assigned_student_ids = array_column($assigned_students, 'id');
     </div>
 
     <script>
+        // Переменные для работы со страницей (translations и currentLang уже объявлены в language_switcher.php)
+        
         // Данные слов для JavaScript
         const wordsData = <?php echo json_encode(array_column($words, null, 'id')); ?>;
+        
+        // Функция валидации изображения на клиенте
+        function validateImageFile(file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            
+            let errors = [];
+            
+            if (file.size > maxSize) {
+                const sizeErrorMsg = (typeof translations !== 'undefined' && translations[currentLang] && translations[currentLang]['image_validation_client_error'])
+                    ? translations[currentLang]['image_validation_client_error'].replace('{max_size}', '5').replace('{current_size}', (file.size / 1024 / 1024).toFixed(2))
+                    : `Размер изображения не должен превышать 5MB. Текущий размер: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+                errors.push(sizeErrorMsg);
+            }
+            
+            if (!allowedTypes.includes(file.type)) {
+                const formatErrorMsg = (typeof translations !== 'undefined' && translations[currentLang] && translations[currentLang]['image_format_client_error'])
+                    ? translations[currentLang]['image_format_client_error'].replace('{allowed_formats}', allowedExtensions.map(ext => ext.toUpperCase()).join(', '))
+                    : `Недопустимый формат изображения. Разрешены: ${allowedExtensions.map(ext => ext.toUpperCase()).join(', ')}`;
+                errors.push(formatErrorMsg);
+            }
+            
+            return errors;
+        }
+        
+        // Обработчик для валидации при выборе файла в основной форме
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем доступность переменных из language_switcher.php
+            if (typeof translations === 'undefined') {
+                console.error('Переводы не загружены');
+                return;
+            }
+            
+            // Инициализируем текущий язык если не был установлен
+            if (typeof currentLang === 'undefined') {
+                currentLang = localStorage.getItem('selectedLanguage') || 'ru';
+            }
+            
+            // Обработчики для валидации файлов
+            const imageInput = document.getElementById('image');
+            const newImageInput = document.getElementById('newImage');
+            
+            if (imageInput) {
+                imageInput.addEventListener('change', function(e) {
+                    if (e.target.files.length > 0) {
+                        const errors = validateImageFile(e.target.files[0]);
+                        if (errors.length > 0) {
+                            alert(errors.join('\n'));
+                            e.target.value = '';
+                        }
+                    }
+                });
+            }
+            
+            if (newImageInput) {
+                newImageInput.addEventListener('change', function(e) {
+                    if (e.target.files.length > 0) {
+                        const errors = validateImageFile(e.target.files[0]);
+                        if (errors.length > 0) {
+                            alert(errors.join('\n'));
+                            e.target.value = '';
+                        }
+                    }
+                });
+            }
+        });
         
         // Функция для обновления превью цвета
         function updateColorPreview(color) {
@@ -920,7 +1025,7 @@ $assigned_student_ids = array_column($assigned_students, 'id');
             const translation = document.getElementById(`translation-edit-${wordId}`).value.trim();
             
             if (!foreignWord || !translation) {
-                const alertMessage = translations[currentLang] && translations[currentLang]['fill_all_fields'] 
+                const alertMessage = (typeof translations !== 'undefined' && translations[currentLang] && translations[currentLang]['fill_all_fields'])
                     ? translations[currentLang]['fill_all_fields'] 
                     : 'Заполните все поля!';
                 alert(alertMessage);

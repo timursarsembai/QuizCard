@@ -691,5 +691,18 @@ return [
     'test_result_all_tests' => '📚 All Tests',
     'test_result_home' => '🏠 Home',
     'test_result_to_tests' => '← To Tests',
+    
+    // Image Upload Validation
+    'image_max_size_error' => 'Image size must not exceed {max_size}MB. Current size: {current_size}MB',
+    'image_format_error' => 'Invalid image format. Allowed: {allowed_formats}',
+    'image_mime_type_error' => 'Invalid file type. Please upload only images.',
+    'image_invalid_error' => 'The uploaded file is not a valid image.',
+    'image_upload_error' => 'Error uploading image.',
+    'image_directory_error' => 'Error creating upload directory.',
+    'image_validation_client_error' => 'Image size must not exceed {max_size}MB. Current size: {current_size}MB',
+    'image_format_client_error' => 'Invalid image format. Allowed: {allowed_formats}',
+    'image_constraints_title' => 'Constraints:',
+    'image_max_size_constraint' => 'Maximum size: 5MB',
+    'image_formats_constraint' => 'Formats: JPG, PNG, GIF, WebP',
 ];
 ?>

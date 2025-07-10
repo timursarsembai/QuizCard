@@ -6,6 +6,7 @@ ini_set('display_startup_errors', 1);
 
 session_start();
 require_once '../config/database.php';
+require_once '../config/upload_config.php';
 require_once '../classes/User.php';
 require_once '../classes/Vocabulary.php';
 require_once '../classes/Deck.php';
@@ -340,10 +341,10 @@ function processRow($row, $deck_id, $vocabulary, $row_num) {
 }
 
 function downloadAndSaveImage($image_data, $word_hint) {
-    // Создаем директорию для изображений если её нет
-    $upload_dir = '../uploads/vocabulary/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
+    // Создаем директорию для изображений используя конфигурацию
+    $upload_dir = UploadConfig::VOCABULARY_UPLOAD_DIR;
+    if (!UploadConfig::ensureUploadDirectory($upload_dir)) {
+        throw new Exception('Не удалось создать директорию для загрузки изображений');
     }
     
     // Проверяем, является ли это URL
@@ -365,8 +366,7 @@ function downloadImageFromUrl($url, $upload_dir, $word_hint) {
     $extension = $path_info['extension'] ?? 'jpg';
     
     // Проверяем допустимые расширения
-    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    if (!in_array(strtolower($extension), $allowed_extensions)) {
+    if (!in_array(strtolower($extension), UploadConfig::VOCABULARY_IMAGE_ALLOWED_EXTENSIONS)) {
         $extension = 'jpg';
     }
     
@@ -387,10 +387,20 @@ function downloadImageFromUrl($url, $upload_dir, $word_hint) {
         throw new Exception('Не удалось скачать изображение с URL: ' . $url);
     }
     
+    // Проверяем размер файла
+    if (strlen($image_data) > UploadConfig::VOCABULARY_IMAGE_MAX_SIZE) {
+        throw new Exception('Размер изображения превышает ' . (UploadConfig::VOCABULARY_IMAGE_MAX_SIZE / 1024 / 1024) . 'MB');
+    }
+    
     // Проверяем, что это действительно изображение
     $image_info = @getimagesizefromstring($image_data);
     if ($image_info === false) {
         throw new Exception('Скачанный файл не является изображением: ' . $url);
+    }
+    
+    // Проверяем MIME-тип
+    if (!in_array($image_info['mime'], UploadConfig::VOCABULARY_IMAGE_ALLOWED_MIME_TYPES)) {
+        throw new Exception('Недопустимый тип изображения: ' . $image_info['mime']);
     }
     
     // Сохраняем файл
@@ -398,7 +408,7 @@ function downloadImageFromUrl($url, $upload_dir, $word_hint) {
         throw new Exception('Не удалось сохранить изображение');
     }
     
-    return 'uploads/vocabulary/' . $filename;
+    return UploadConfig::VOCABULARY_UPLOAD_PATH . $filename;
 }
 
 function saveBase64Image($base64_data, $upload_dir, $word_hint) {
@@ -411,6 +421,27 @@ function saveBase64Image($base64_data, $upload_dir, $word_hint) {
             throw new Exception('Некорректные base64 данные изображения');
         }
         
+        // Проверяем размер файла
+        if (strlen($image_data) > UploadConfig::VOCABULARY_IMAGE_MAX_SIZE) {
+            throw new Exception('Размер изображения превышает ' . (UploadConfig::VOCABULARY_IMAGE_MAX_SIZE / 1024 / 1024) . 'MB');
+        }
+        
+        // Проверяем допустимый тип изображения
+        if (!in_array(strtolower($image_type), UploadConfig::VOCABULARY_IMAGE_ALLOWED_EXTENSIONS)) {
+            throw new Exception('Недопустимый тип изображения: ' . $image_type);
+        }
+        
+        // Проверяем, что это действительно изображение
+        $image_info = @getimagesizefromstring($image_data);
+        if ($image_info === false) {
+            throw new Exception('Данные не являются корректным изображением');
+        }
+        
+        // Проверяем MIME-тип
+        if (!in_array($image_info['mime'], UploadConfig::VOCABULARY_IMAGE_ALLOWED_MIME_TYPES)) {
+            throw new Exception('Недопустимый MIME-тип изображения: ' . $image_info['mime']);
+        }
+        
         // Генерируем имя файла
         $filename = 'import_' . time() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $word_hint) . '.' . $image_type;
         $file_path = $upload_dir . $filename;
@@ -420,7 +451,7 @@ function saveBase64Image($base64_data, $upload_dir, $word_hint) {
             throw new Exception('Не удалось сохранить изображение');
         }
         
-        return 'uploads/vocabulary/' . $filename;
+        return UploadConfig::VOCABULARY_UPLOAD_PATH . $filename;
     }
     
     throw new Exception('Некорректный формат base64 изображения');
