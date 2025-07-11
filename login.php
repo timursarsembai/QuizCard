@@ -1,83 +1,140 @@
 <?php
 session_start();
+
+// Инициализация систем безопасности
+require_once 'classes/EnvLoader.php';
+require_once 'classes/SimpleCSRF.php';
+require_once 'classes/Validator.php';
+require_once 'classes/Sanitizer.php';
+require_once 'classes/RateLimit.php';
+require_once 'classes/SecurityLogger.php';
 require_once 'includes/translations.php';
 
-// 1. Централизованные переводы
-// $translations = [ ... ]; // Этот массив теперь в includes/translations.php
+// Инициализация CSRF защиты - временно SimpleCSRF
+// CSRFProtection::init();
 
 $error_key = '';
 $success_key = '';
 $activeTab = 'login';
+$rateLimitError = false;
 
 if ($_POST) {
     try {
-        require_once 'config/database.php';
-        require_once 'classes/User.php';
-        
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        if (!$database->isConnected()) {
-            $error_key = 'error_db_connection';
+        // Проверка CSRF токена - временно упрощенная
+        if (!SimpleCSRF::validateRequest()) {
+            SecurityLogger::logCSRFAttempt(['form' => 'login_form']);
+            $error_key = 'error_csrf';
         } else {
-            $user = new User($db);
-
-            if (isset($_POST['login'])) {
-                $username = trim($_POST['username']);
-                $password = $_POST['password'];
-
-                if (empty($username) || empty($password)) {
-                    $error_key = 'error_fill_fields';
-                } elseif ($user->login($username, $password)) {
-                    if ($user->getRole() === 'teacher') {
-                        // Проверяем статус верификации email для преподавателей
-                        if (!isset($_SESSION['email_verified']) || !$_SESSION['email_verified']) {
-                            // Если email не подтвержден, перенаправляем на страницу уведомления
-                            if (!empty($_SESSION['email'])) {
-                                header("Location: email_verification_required.php");
-                                exit();
-                            }
-                        }
-                        header("Location: teacher/dashboard.php");
-                        exit();
-                    } else {
-                        $error_key = 'error_teacher_only';
-                    }
-                } else {
-                    $error_key = 'error_invalid_credentials';
-                }
-            }
+            require_once 'config/database.php';
+            require_once 'classes/User.php';
             
-            if (isset($_POST['register'])) {
-                $activeTab = 'register';
-                
-                $username = trim($_POST['reg_username']);
-                $password = $_POST['reg_password'];
-                $confirm_password = $_POST['reg_confirm_password'];
-                $first_name = trim($_POST['reg_first_name']);
-                $last_name = trim($_POST['reg_last_name']);
-                $email = trim($_POST['reg_email']);
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            if (!$database->isConnected()) {
+                $error_key = 'error_db_connection';
+                SecurityLogger::logSecurityError('Database connection failed on login');
+            } else {
+                $user = new User($db);
 
-                if (strlen($password) < 6) {
-                    $error_key = 'error_password_length';
-                } elseif ($password !== $confirm_password) {
-                    $error_key = 'error_password_mismatch';
-                } elseif (empty($username) || empty($first_name) || empty($last_name)) {
-                    $error_key = 'error_all_fields_required';
-                } elseif (empty($email)) {
-                    $error_key = 'error_email_required';
-                } else {
-                    if ($user->isUsernameExists($username)) {
-                        $error_key = 'error_username_exists';
-                    } elseif ($user->isEmailExists($email)) {
-                        $error_key = 'error_email_exists';
+                if (isset($_POST['login'])) {
+                    // Санитизация входных данных
+                    $username = Sanitizer::username($_POST['username'] ?? '');
+                    $password = $_POST['password'] ?? '';
+
+                    // Проверка rate limiting для входа
+                    if (!RateLimit::checkLogin($username)) {
+                        $rateLimitError = true;
+                        $resetTime = RateLimit::getResetTime('login_' . hash('sha256', $username), 15);
+                        $error_key = 'error_rate_limit';
+                        SecurityLogger::logRateLimitExceeded('login', 5, ['username' => $username]);
                     } else {
-                        $user_id = $user->register($username, $password, $first_name, $last_name, $email);
-                        if ($user_id) {
-                            $success_key = 'success_register_email_sent';
-                            $activeTab = 'login';
+                        // Валидация данных
+                        $validator = Validator::make($_POST);
+                        $validator->username('username', 3, 50)
+                                 ->custom('password', function($value) {
+                                     return !empty($value) && strlen($value) >= 1;
+                                 }, 'Пароль обязателен');
+
+                        if (!$validator->isValid()) {
+                            $error_key = 'error_fill_fields';
+                            SecurityLogger::logValidationError('login_form', $username, $validator->getErrorsAsString());
+                        } elseif ($user->login($username, $password)) {
+                            // Успешный вход
+                            SecurityLogger::logLogin($username, true, ['role' => $user->getRole()]);
+                            
+                            if ($user->getRole() === 'teacher') {
+                                // Проверяем статус верификации email для преподавателей
+                                if (!isset($_SESSION['email_verified']) || !$_SESSION['email_verified']) {
+                                    if (!empty($_SESSION['email'])) {
+                                        header("Location: email_verification_required.php");
+                                        exit();
+                                    }
+                                }
+                                header("Location: teacher/dashboard.php");
+                                exit();
+                            } else {
+                                $error_key = 'error_teacher_only';
+                            }
                         } else {
-                            $error_key = 'error_system';
+                            // Неудачный вход
+                            RateLimit::recordFailedLogin($username);
+                            SecurityLogger::logLogin($username, false, ['reason' => 'invalid_credentials']);
+                            $error_key = 'error_invalid_credentials';
+                        }
+                    }
+                }
+                
+                if (isset($_POST['register'])) {
+                    $activeTab = 'register';
+                    
+                    // Проверка rate limiting для регистрации
+                    if (!RateLimit::check('register', 3, 60)) { // 3 попытки в час
+                        $rateLimitError = true;
+                        $error_key = 'error_rate_limit_register';
+                        SecurityLogger::logRateLimitExceeded('register', 3);
+                    } else {
+                        // Санитизация данных регистрации
+                        $username = Sanitizer::username($_POST['reg_username'] ?? '');
+                        $password = $_POST['reg_password'] ?? '';
+                        $confirm_password = $_POST['reg_confirm_password'] ?? '';
+                        $first_name = Sanitizer::name($_POST['reg_first_name'] ?? '');
+                        $last_name = Sanitizer::name($_POST['reg_last_name'] ?? '');
+                        $email = Sanitizer::email($_POST['reg_email'] ?? '');
+
+                        // Валидация данных регистрации
+                        $validator = Validator::make([
+                            'reg_username' => $username,
+                            'reg_password' => $password,
+                            'reg_confirm_password' => $confirm_password,
+                            'reg_first_name' => $first_name,
+                            'reg_last_name' => $last_name,
+                            'reg_email' => $email
+                        ]);
+
+                        $validator->username('reg_username', 3, 50)
+                                 ->password('reg_password', 6, true)
+                                 ->matches('reg_password', 'reg_confirm_password', 'Пароли не совпадают')
+                                 ->name('reg_first_name', 2, 50)
+                                 ->name('reg_last_name', 2, 50)
+                                 ->email('reg_email')
+                                 ->unique('reg_username', 'users', 'username', $db)
+                                 ->unique('reg_email', 'users', 'email', $db);
+
+                        if (!$validator->isValid()) {
+                            $error_key = 'error_validation';
+                            SecurityLogger::logValidationError('register_form', $email, $validator->getErrorsAsString());
+                        } else {
+                            RateLimit::record('register', 60);
+                            $user_id = $user->register($username, $password, $first_name, $last_name, $email);
+                            if ($user_id) {
+                                SecurityLogger::logUserAction('created', $username, 'self_registration');
+                                $success_key = 'success_register_email_sent';
+                                $activeTab = 'login';
+                            } else {
+                                $error_key = 'error_system';
+                                SecurityLogger::logSecurityError('User registration failed', ['username' => $username, 'email' => $email]);
+                            }
                         }
                     }
                 }
@@ -85,6 +142,7 @@ if ($_POST) {
         }
     } catch (Exception $e) {
         $error_key = 'error_system';
+        SecurityLogger::logSecurityError('Exception in login.php', ['exception' => $e->getMessage()]);
     }
 }
 ?>
@@ -93,6 +151,8 @@ if ($_POST) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php echo SimpleCSRF::getTokenMeta(); ?>
+    <!-- CSRF Meta Tag Updated -->
     <title data-translate-key="page_title_login">QuizCard - Мұғалімдердің панелі</title>
     <style>
         * {
@@ -433,6 +493,7 @@ if ($_POST) {
             <!-- Login Form -->
             <div id="login" class="tab-pane <?php echo $activeTab === 'login' ? 'active' : ''; ?>">
                 <form action="login.php" method="post">
+                    <?php echo SimpleCSRF::getTokenInput(); ?>
                     <div class="form-group">
                         <label for="username" data-translate-key="username_label">Пайдаланушы аты</label>
                         <input type="text" id="username" name="username" required>
@@ -451,6 +512,7 @@ if ($_POST) {
             <!-- Register Form -->
             <div id="register" class="tab-pane <?php echo $activeTab === 'register' ? 'active' : ''; ?>">
                 <form action="login.php" method="post">
+                    <?php echo SimpleCSRF::getTokenInput(); ?>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="reg_first_name" data-translate-key="first_name_label">Аты</label>
@@ -482,5 +544,8 @@ if ($_POST) {
             </div>
         </div>
     </div>
+
+    <!-- Подключение системы безопасности -->
+    <script src="js/security.js"></script>
 </body>
 </html>

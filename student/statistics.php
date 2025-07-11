@@ -106,11 +106,12 @@ $query = "SELECT v.foreign_word, v.translation, lp.repetition_count, lp.ease_fac
           FROM learning_progress lp
           INNER JOIN vocabulary v ON lp.vocabulary_id = v.id
           INNER JOIN deck_assignments da ON v.deck_id = da.deck_id
-          WHERE lp.student_id = :student_id AND da.student_id = :student_id
+          WHERE lp.student_id = :student_id1 AND da.student_id = :student_id2
           ORDER BY lp.ease_factor ASC, lp.repetition_count DESC
           LIMIT 10";
 $stmt = $db->prepare($query);
-$stmt->bindParam(':student_id', $student_id);
+$stmt->bindParam(':student_id1', $student_id);
+$stmt->bindParam(':student_id2', $student_id);
 $stmt->execute();
 $difficult_words = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

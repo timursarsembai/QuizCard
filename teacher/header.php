@@ -171,6 +171,7 @@ if (!isset($translations)) {
                 <a href="decks.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'decks.php' ? 'active' : ''; ?>" data-translate-key="nav_decks">Колоды</a>
                 <a href="tests.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'tests.php' ? 'active' : ''; ?>" data-translate-key="nav_tests">Тесты</a>
                 <a href="students.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'students.php' ? 'active' : ''; ?>" data-translate-key="nav_students">Ученики</a>
+                <a href="security-dashboard.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'security-dashboard.php' ? 'active' : ''; ?>" data-translate-key="nav_security">🔒 Безопасность</a>
                 <a href="account.php" class="btn <?php echo basename($_SERVER['PHP_SELF']) == 'account.php' ? 'active' : ''; ?>" data-translate-key="nav_account">Аккаунт</a>
                 <a href="../logout.php" class="btn" data-translate-key="nav_logout">Выйти</a>
             </div>

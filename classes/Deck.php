@@ -33,9 +33,6 @@ class Deck {
         
         $decks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Диагностика: логируем результат SQL-запроса
-        file_put_contents('/tmp/decks_debug.txt', print_r($decks, true));
-        
         // Используем ассоциативный массив для гарантированного удаления дубликатов
         $unique_decks_map = [];
         
@@ -199,12 +196,13 @@ class Deck {
                   FROM decks d
                   INNER JOIN deck_assignments da ON d.id = da.deck_id
                   LEFT JOIN vocabulary v ON d.id = v.deck_id
-                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id
-                  WHERE da.student_id = :student_id
+                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id1
+                  WHERE da.student_id = :student_id2
                   GROUP BY d.id
                   ORDER BY da.assigned_at DESC";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':student_id', $student_id);
+        $stmt->bindParam(':student_id1', $student_id);
+        $stmt->bindParam(':student_id2', $student_id);
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -218,12 +216,13 @@ class Deck {
                   FROM decks d
                   INNER JOIN deck_assignments da ON d.id = da.deck_id
                   LEFT JOIN vocabulary v ON d.id = v.deck_id
-                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id
-                  WHERE da.student_id = :student_id AND d.teacher_id = :teacher_id
+                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id1
+                  WHERE da.student_id = :student_id2 AND d.teacher_id = :teacher_id
                   GROUP BY d.id
                   ORDER BY d.name";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':student_id', $student_id);
+        $stmt->bindParam(':student_id1', $student_id);
+        $stmt->bindParam(':student_id2', $student_id);
         $stmt->bindParam(':teacher_id', $teacher_id);
         $stmt->execute();
         

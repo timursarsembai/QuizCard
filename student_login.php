@@ -1,6 +1,17 @@
 <?php
 session_start();
 
+// Инициализация систем безопасности
+require_once 'classes/EnvLoader.php';
+require_once 'classes/SimpleCSRF.php';
+require_once 'classes/Validator.php';
+require_once 'classes/Sanitizer.php';
+require_once 'classes/RateLimit.php';
+require_once 'classes/SecurityLogger.php';
+
+// Инициализация CSRF защиты - временно SimpleCSRF
+// CSRFProtection::init();
+
 // 1. Централизованные переводы
 $translations = [
     'kk' => [
@@ -54,36 +65,67 @@ $translations = [
 ];
 
 $error_key = '';
+$rateLimitError = false;
 
 if ($_POST) {
     try {
-        require_once 'config/database.php';
-        require_once 'classes/User.php';
-        
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        if (!$database->isConnected()) {
-            $error_key = 'error_db_connection';
+        // Проверка CSRF токена - временно упрощенная
+        if (!SimpleCSRF::validateRequest()) {
+            SecurityLogger::logCSRFAttempt(['form' => 'student_login']);
+            $error_key = 'error_csrf';
         } else {
-            $user = new User($db);
-
-            $username = trim($_POST['username']);
-            $password = $_POST['password'];
-
-            if ($user->login($username, $password)) {
-                if ($user->getRole() === 'student') {
-                    header("Location: student/dashboard.php");
-                    exit();
-                } else {
-                    $error_key = 'error_student_only';
-                }
+            require_once 'config/database.php';
+            require_once 'classes/User.php';
+            
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            if (!$database->isConnected()) {
+                $error_key = 'error_db_connection';
+                SecurityLogger::logSecurityError('Database connection failed on student login');
             } else {
-                $error_key = 'error_invalid_credentials';
+                $user = new User($db);
+
+                // Санитизация входных данных
+                $username = Sanitizer::username($_POST['username'] ?? '');
+                $password = $_POST['password'] ?? '';
+
+                // Проверка rate limiting
+                if (!RateLimit::checkLogin($username)) {
+                    $rateLimitError = true;
+                    $error_key = 'error_rate_limit';
+                    SecurityLogger::logRateLimitExceeded('student_login', 5, ['username' => $username]);
+                } else {
+                    // Валидация данных
+                    $validator = Validator::make($_POST);
+                    $validator->username('username', 3, 50)
+                             ->custom('password', function($value) {
+                                 return !empty($value) && strlen($value) >= 1;
+                             }, 'Пароль обязателен');
+
+                    if (!$validator->isValid()) {
+                        $error_key = 'error_fill_fields';
+                        SecurityLogger::logValidationError('student_login', $username, $validator->getErrorsAsString());
+                    } elseif ($user->login($username, $password)) {
+                        if ($user->getRole() === 'student') {
+                            SecurityLogger::logLogin($username, true, ['role' => 'student']);
+                            header("Location: student/dashboard.php");
+                            exit();
+                        } else {
+                            $error_key = 'error_student_only';
+                            SecurityLogger::logSuspiciousActivity('Teacher attempted student login', ['username' => $username]);
+                        }
+                    } else {
+                        RateLimit::recordFailedLogin($username);
+                        SecurityLogger::logLogin($username, false, ['role' => 'student', 'reason' => 'invalid_credentials']);
+                        $error_key = 'error_invalid_credentials';
+                    }
+                }
             }
         }
     } catch (Exception $e) {
         $error_key = 'error_system';
+        SecurityLogger::logSecurityError('Exception in student_login.php', ['exception' => $e->getMessage()]);
     }
 }
 ?>
@@ -92,6 +134,7 @@ if ($_POST) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php echo SimpleCSRF::getTokenMeta(); ?>
     <title data-translate-key="page_title">QuizCard - Оқушылар үшін кіру</title>
     <style>
         * {
@@ -393,6 +436,7 @@ if ($_POST) {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <?php echo SimpleCSRF::getTokenInput(); ?>
             <div class="form-group">
                 <label for="username" data-translate-key="username_label">Пайдаланушы аты:</label>
                 <input type="text" id="username" name="username" required 
@@ -419,5 +463,8 @@ if ($_POST) {
             <a href="login.php" data-translate-key="teacher_link">👨‍🏫 Мұғалімдер үшін кіру</a>
         </div>
     </div>
+
+    <!-- Подключение системы безопасности -->
+    <script src="js/security.js"></script>
 </body>
 </html>

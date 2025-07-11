@@ -56,11 +56,12 @@ class Vocabulary {
                   FROM vocabulary v
                   INNER JOIN decks d ON v.deck_id = d.id
                   INNER JOIN deck_assignments da ON d.id = da.deck_id
-                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id
-                  WHERE da.student_id = :student_id
+                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id1
+                  WHERE da.student_id = :student_id2
                   ORDER BY d.name, v.created_at DESC";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':student_id', $student_id);
+        $stmt->bindParam(':student_id1', $student_id);
+        $stmt->bindParam(':student_id2', $student_id);
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -73,8 +74,8 @@ class Vocabulary {
                   FROM vocabulary v
                   INNER JOIN decks d ON v.deck_id = d.id
                   INNER JOIN deck_assignments da ON d.id = da.deck_id
-                  INNER JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id
-                  WHERE da.student_id = :student_id AND lp.next_review_date <= CURDATE()";
+                  INNER JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id1
+                  WHERE da.student_id = :student_id2 AND lp.next_review_date <= CURDATE()";
                   
         if ($deck_id) {
             $query .= " AND d.id = :deck_id";
@@ -83,7 +84,8 @@ class Vocabulary {
         $query .= " ORDER BY lp.next_review_date ASC, lp.repetition_count DESC, RAND()";
         
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':student_id', $student_id);
+        $stmt->bindParam(':student_id1', $student_id);
+        $stmt->bindParam(':student_id2', $student_id);
         if ($deck_id) {
             $stmt->bindParam(':deck_id', $deck_id);
         }
@@ -251,13 +253,14 @@ class Vocabulary {
         if ($stmt->execute()) {
             // Создаем новые записи прогресса с начальными значениями
             $query = "INSERT INTO learning_progress (student_id, vocabulary_id, next_review_date)
-                      SELECT :student_id, v.id, CURDATE()
+                      SELECT :student_id1, v.id, CURDATE()
                       FROM vocabulary v
                       INNER JOIN decks d ON v.deck_id = d.id
                       INNER JOIN deck_assignments da ON d.id = da.deck_id
-                      WHERE da.student_id = :student_id AND d.teacher_id = :teacher_id";
+                      WHERE da.student_id = :student_id2 AND d.teacher_id = :teacher_id";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':student_id', $student_id);
+            $stmt->bindParam(':student_id1', $student_id);
+            $stmt->bindParam(':student_id2', $student_id);
             $stmt->bindParam(':teacher_id', $teacher_id);
             
             return $stmt->execute();
@@ -312,10 +315,11 @@ class Vocabulary {
                   FROM vocabulary v
                   INNER JOIN decks d ON v.deck_id = d.id
                   INNER JOIN deck_assignments da ON d.id = da.deck_id
-                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id
-                  WHERE da.student_id = :student_id";
+                  LEFT JOIN learning_progress lp ON v.id = lp.vocabulary_id AND lp.student_id = :student_id1
+                  WHERE da.student_id = :student_id2";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':student_id', $student_id);
+        $stmt->bindParam(':student_id1', $student_id);
+        $stmt->bindParam(':student_id2', $student_id);
         $stmt->execute();
         
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -329,18 +333,24 @@ class Vocabulary {
                     d.id,
                     d.name,
                     d.color,
-                    d.daily_word_limit,
+                    d.daily_word_limit as daily_limit,
                     COALESCE(dsl.words_studied, 0) as words_studied_today,
-                    (d.daily_word_limit - COALESCE(dsl.words_studied, 0)) as remaining_today
+                    (d.daily_word_limit - COALESCE(dsl.words_studied, 0)) as remaining_today,
+                    CASE 
+                        WHEN d.daily_word_limit IS NULL OR d.daily_word_limit = 0 THEN 1
+                        WHEN (d.daily_word_limit - COALESCE(dsl.words_studied, 0)) > 0 THEN 1
+                        ELSE 0
+                    END as can_study_more
                   FROM decks d
                   INNER JOIN deck_assignments da ON d.id = da.deck_id
                   LEFT JOIN daily_study_limits dsl ON d.id = dsl.deck_id 
-                            AND dsl.student_id = :student_id 
+                            AND dsl.student_id = :student_id1 
                             AND dsl.study_date = CURDATE()
-                  WHERE da.student_id = :student_id
+                  WHERE da.student_id = :student_id2
                   ORDER BY d.name";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':student_id', $student_id);
+        $stmt->bindParam(':student_id1', $student_id);
+        $stmt->bindParam(':student_id2', $student_id);
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

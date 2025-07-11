@@ -1,0 +1,164 @@
+# Основные настройки безопасности
+# ServerTokens Prod - не поддерживается в .htaccess на shared hosting
+# ServerSignature Off - не поддерживается в .htaccess на shared hosting
+
+# Защита файлов конфигурации
+<Files ".env">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "*.env">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Защита служебных файлов
+<FilesMatch "^\.">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Защита от инъекций в URL и блокировка служебных директорий
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Защита логов
+    RewriteRule ^logs/ - [F]
+    
+    # Блокировка всех не-PHP файлов в служебных директориях
+    RewriteRule ^(config|includes|classes)/.*\.(?!php$)[^.]+$ - [F]
+    
+    # Блокировка PHP файлов в uploads
+    RewriteRule ^uploads/.*\.php$ - [F]
+    
+    # Блокировка подозрительных параметров
+    RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} proc/self/environ [OR]
+    RewriteCond %{QUERY_STRING} mosConfig_[a-zA-Z_]{1,21}(=|\%3D) [OR]
+    RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [OR]
+    RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (<|%3C).*iframe.*(>|%3E) [NC]
+    RewriteRule .* - [F]
+    
+    # Блокировка попыток доступа к системным файлам
+    RewriteCond %{REQUEST_URI} \.\./
+    RewriteRule .* - [F]
+    
+    # Блокировка SQL инъекций в URL
+    RewriteCond %{QUERY_STRING} (union.*select|insert.*into|delete.*from) [NC]
+    RewriteRule .* - [F]
+    
+    # Защита от hotlinking изображений
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?%{HTTP_HOST} [NC]
+    RewriteRule \.(gif|jpg|jpeg|png)$ - [F]
+</IfModule>
+
+# Защита бэкапов и временных файлов
+<FilesMatch "\.(bak|backup|tmp|old|orig|save)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Защита файлов с исходным кодом
+<FilesMatch "\.(sql|md|log|txt)$">
+    Order Allow,Deny
+    Deny from all
+    # Исключения для необходимых файлов
+    <Files "robots.txt">
+        Allow from all
+    </Files>
+</FilesMatch>
+
+# Защита от directory browsing
+Options -Indexes
+
+# Заголовки безопасности
+<IfModule mod_headers.c>
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Content Type Options
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Frame Options
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (базовая)
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+    
+    # Remove Server header
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# Лимиты размера запросов - может не поддерживаться на shared hosting
+# LimitRequestBody 10485760  # 10MB
+
+# Таймауты - может не поддерживаться на некоторых shared hosting
+# <IfModule mod_reqtimeout.c>
+#     RequestReadTimeout header=20-40,MinRate=500 body=20,MinRate=500
+# </IfModule>
+
+# Кеширование для статических ресурсов
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/ico "access plus 1 month"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Сжатие
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Настройки PHP для безопасности
+<IfModule mod_php7.c>
+    php_flag expose_php Off
+    php_flag allow_url_fopen Off
+    php_flag allow_url_include Off
+    php_flag log_errors On
+    php_flag display_errors Off
+    php_value max_execution_time 30
+    php_value max_input_time 30
+    php_value memory_limit 128M
+    php_value post_max_size 10M
+    php_value upload_max_filesize 5M
+    php_value max_file_uploads 5
+</IfModule>
+
+# Настройки для старых версий PHP
+<IfModule mod_php5.c>
+    php_flag expose_php Off
+    php_flag allow_url_fopen Off
+    php_flag allow_url_include Off
+    php_flag log_errors On
+    php_flag display_errors Off
+    php_value max_execution_time 30
+    php_value max_input_time 30
+    php_value memory_limit 128M
+    php_value post_max_size 10M
+    php_value upload_max_filesize 5M
+    php_value max_file_uploads 5
+</IfModule>
+
+# Пользовательские страницы ошибок
+ErrorDocument 400 /quizcard/error.php
+ErrorDocument 401 /quizcard/error.php
+ErrorDocument 403 /quizcard/error.php
+ErrorDocument 404 /quizcard/error.php
+ErrorDocument 500 /quizcard/error.php
+
+# Редирект для old URLs (если нужно)
+# Redirect 301 /old-page.html /new-page.php

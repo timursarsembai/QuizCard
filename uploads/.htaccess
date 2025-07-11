@@ -1,0 +1,24 @@
+# Безопасность для директории загрузок
+# Разрешаем безопасные типы файлов
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|mp3|wav|csv|txt)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Запрещаем выполнение PHP файлов
+<FilesMatch "\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Запрещаем все остальные типы файлов
+<FilesMatch ".*">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Заголовки безопасности
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+</IfModule>

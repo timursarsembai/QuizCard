@@ -6,7 +6,51 @@ class User {
         $this->conn = $db;
     }
     
+    /**
+     * Безопасное хеширование пароля
+     */
+    private function hashPassword($password) {
+        // Временно используем только BCRYPT для совместимости с сервером
+        return password_hash($password, PASSWORD_BCRYPT, [
+            'cost' => 12 // Безопасная стоимость для bcrypt
+        ]);
+        
+        /* Оригинальный код с Argon2ID - закомментирован из-за проблем на сервере
+        if (defined('PASSWORD_ARGON2ID')) {
+            return password_hash($password, PASSWORD_ARGON2ID, [
+                'memory_cost' => 65536, // 64 MB
+                'time_cost' => 4        // 4 итерации  
+            ]);
+        } else {
+            return password_hash($password, PASSWORD_BCRYPT, [
+                'cost' => 12
+            ]);
+        }
+        */
+    }
+    
+    /**
+     * Проверка необходимости перехеширования пароля
+     */
+    private function needsRehash($hash) {
+        // Временно используем только BCRYPT для совместимости
+        return password_needs_rehash($hash, PASSWORD_BCRYPT, ['cost' => 12]);
+        
+        /* Оригинальный код - закомментирован из-за проблем на сервере
+        if (defined('PASSWORD_ARGON2ID')) {
+            return password_needs_rehash($hash, PASSWORD_ARGON2ID, [
+                'memory_cost' => 65536,
+                'time_cost' => 4
+            ]);
+        } else {
+            return password_needs_rehash($hash, PASSWORD_BCRYPT, ['cost' => 12]);
+        }
+        */
+    }
+    
     public function login($username, $password) {
+        require_once 'SecurityLogger.php';
+        
         $query = "SELECT id, username, password, role, first_name, last_name, teacher_id, email_verified, email 
                   FROM users WHERE username = :username";
         $stmt = $this->conn->prepare($query);
@@ -16,6 +60,11 @@ class User {
         if ($stmt->rowCount() > 0) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if (password_verify($password, $row['password'])) {
+                // Проверяем, нужно ли перехешировать пароль
+                if ($this->needsRehash($row['password'])) {
+                    $this->updatePasswordHash($row['id'], $password);
+                }
+                
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['username'] = $row['username'];
                 $_SESSION['role'] = $row['role'];
@@ -24,10 +73,23 @@ class User {
                 $_SESSION['teacher_id'] = $row['teacher_id'];
                 $_SESSION['email_verified'] = $row['email_verified'];
                 $_SESSION['email'] = $row['email'];
+                
                 return true;
             }
         }
         return false;
+    }
+    
+    /**
+     * Обновление хеша пароля до нового алгоритма
+     */
+    private function updatePasswordHash($userId, $password) {
+        $newHash = $this->hashPassword($password);
+        $query = "UPDATE users SET password = :password WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':password', $newHash);
+        $stmt->bindParam(':id', $userId);
+        $stmt->execute();
     }
     
     public function logout() {
@@ -43,7 +105,7 @@ class User {
     }
     
     public function createTeacher($username, $password, $first_name, $last_name, $email = null) {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $hashed_password = $this->hashPassword($password);
         
         $query = "INSERT INTO users (username, password, role, first_name, last_name, email, email_verified) 
                   VALUES (:username, :password, 'teacher', :first_name, :last_name, :email, 0)";
@@ -77,7 +139,7 @@ class User {
     }
 
     public function createStudent($username, $password, $first_name, $last_name, $teacher_id) {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $hashed_password = $this->hashPassword($password);
         
         $query = "INSERT INTO users (username, password, role, first_name, last_name, teacher_id) 
                   VALUES (:username, :password, 'student', :first_name, :last_name, :teacher_id)";
@@ -155,7 +217,7 @@ class User {
         
         if ($password !== null) {
             $updates[] = "password = :password";
-            $params[':password'] = password_hash($password, PASSWORD_DEFAULT);
+            $params[':password'] = $this->hashPassword($password);
         }
         
         if ($first_name !== null) {
@@ -219,7 +281,7 @@ class User {
         
         if ($password !== null) {
             $updates[] = "password = :password";
-            $params[':password'] = password_hash($password, PASSWORD_DEFAULT);
+            $params[':password'] = $this->hashPassword($password);
         }
         
         if ($first_name !== null) {

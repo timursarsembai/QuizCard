@@ -1,3 +1,6 @@
+# Переменные окружения
+.env
+
 # Local database configuration
 config/database_local.php
 
@@ -6,9 +9,16 @@ logs/
 *.log
 
 # User uploads
-uploads/
+uploads/audio/*
+uploads/vocabulary/*
 # Keep folder structure but ignore content
 !uploads/.gitkeep
+!uploads/audio/.gitkeep
+!uploads/vocabulary/.gitkeep
+!uploads/favicon/
+
+# Rate limiting files
+logs/rate_limits/
 
 # Vendor directory for dependencies
 vendor/
@@ -39,3 +49,28 @@ Desktop.ini
 cache/
 sessions/
 tmp/
+
+# Backup and old files
+*.backup
+*.bak
+*.old
+
+# Debug and test files (if not part of functionality)
+*_debug.*
+*_test.* 
+debug_*
+test_debug*
+
+# PHP temporary files
+*.php~
+*.php.bak
+
+# Editor specific files
+*.kate-swp
+.~lock.*
+
+# Node modules (if any)
+node_modules/
+
+# Compiled files
+*.compiled

@@ -487,7 +487,7 @@ $studying_words = $studying_result['studying_count'];
                             </div>
                             <?php if ($daily_limit_info): ?>
                                 <div class="stat-item">
-                                    <div class="stat-number"><?php echo $daily_limit_info['words_studied_today']; ?>/<?php echo $daily_limit_info['daily_limit']; ?></div>
+                                    <div class="stat-number"><?php echo ($daily_limit_info['words_studied_today'] ?? 0); ?>/<?php echo ($daily_limit_info['daily_limit'] ?? 0); ?></div>
                                     <div class="stat-label" data-translate-key="deck_today_stat"><?php echo translate('deck_today_stat'); ?></div>
                                 </div>
                             <?php endif; ?>
@@ -500,12 +500,12 @@ $studying_words = $studying_result['studying_count'];
                         <div class="deck-actions">
                             <?php if ($deck_item['words_to_review'] > 0): ?>
                                 <?php 
-                                $can_study = !$daily_limit_info || $daily_limit_info['can_study_more'] || $daily_limit_info['remaining_today'] > 0;
+                                $can_study = !$daily_limit_info || ($daily_limit_info['can_study_more'] ?? true) || ($daily_limit_info['remaining_today'] ?? 0) > 0;
                                 ?>
                                 <a href="flashcards.php?deck_id=<?php echo $deck_item['id']; ?>" class="btn btn-primary">
                                     <span data-translate-key="study_deck"><?php echo translate('study_deck'); ?></span> (<?php echo $deck_item['words_to_review']; ?> <span data-translate-key="words_count"><?php echo translate('words_count'); ?></span>)
                                 </a>
-                                <?php if ($daily_limit_info && $daily_limit_info['remaining_today'] <= 0): ?>
+                                <?php if ($daily_limit_info && ($daily_limit_info['remaining_today'] ?? 0) <= 0): ?>
                                     <div style="color: #ffa500; font-size: 0.9rem; text-align: center; margin-top: 0.5rem;" data-translate-key="daily_limit_reached">
                                         <?php echo translate('daily_limit_reached'); ?>
                                     </div>
