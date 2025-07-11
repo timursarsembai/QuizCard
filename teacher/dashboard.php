@@ -27,6 +27,15 @@ try {
         exit();
     }
 
+    // Проверяем статус верификации email
+    if (!isset($_SESSION['email_verified']) || !$_SESSION['email_verified']) {
+        // Если email не подтвержден, перенаправляем на страницу уведомления
+        if (!empty($_SESSION['email'])) {
+            header("Location: ../email_verification_required.php");
+            exit();
+        }
+    }
+
     $teacher_id = $_SESSION['user_id'];
 
     // Получаем статистику

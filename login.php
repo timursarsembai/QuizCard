@@ -30,6 +30,14 @@ if ($_POST) {
                     $error_key = 'error_fill_fields';
                 } elseif ($user->login($username, $password)) {
                     if ($user->getRole() === 'teacher') {
+                        // Проверяем статус верификации email для преподавателей
+                        if (!isset($_SESSION['email_verified']) || !$_SESSION['email_verified']) {
+                            // Если email не подтвержден, перенаправляем на страницу уведомления
+                            if (!empty($_SESSION['email'])) {
+                                header("Location: email_verification_required.php");
+                                exit();
+                            }
+                        }
                         header("Location: teacher/dashboard.php");
                         exit();
                     } else {
@@ -56,14 +64,17 @@ if ($_POST) {
                     $error_key = 'error_password_mismatch';
                 } elseif (empty($username) || empty($first_name) || empty($last_name)) {
                     $error_key = 'error_all_fields_required';
+                } elseif (empty($email)) {
+                    $error_key = 'error_email_required';
                 } else {
                     if ($user->isUsernameExists($username)) {
                         $error_key = 'error_username_exists';
                     } elseif ($user->isEmailExists($email)) {
                         $error_key = 'error_email_exists';
                     } else {
-                        if ($user->register($username, $password, $first_name, $last_name, $email)) {
-                            $success_key = 'success_register';
+                        $user_id = $user->register($username, $password, $first_name, $last_name, $email);
+                        if ($user_id) {
+                            $success_key = 'success_register_email_sent';
                             $activeTab = 'login';
                         } else {
                             $error_key = 'error_system';

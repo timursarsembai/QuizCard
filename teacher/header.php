@@ -124,6 +124,22 @@ if (!isset($translations)) {
             border-left: 4px solid #dc3545;
         }
 
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .alert-warning a {
+            color: #856404;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .alert-warning a:hover {
+            color: #533f03;
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem;
@@ -160,3 +176,20 @@ if (!isset($translations)) {
             </div>
         </div>
     </header>
+
+    <?php
+    // Показываем уведомление о необходимости верификации email (если необходимо)
+    if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'teacher') {
+        if (!isset($_SESSION['email_verified']) || !$_SESSION['email_verified']) {
+            if (!empty($_SESSION['email'])) {
+                echo '<div class="container" style="margin-top: 1rem;">';
+                echo '<div class="alert alert-warning">';
+                echo '<i class="fas fa-exclamation-triangle"></i> ';
+                echo '<span data-translate-key="email_not_verified_warning">' . translate('email_not_verified_warning') . '</span> ';
+                echo '<a href="../email_verification_required.php" data-translate-key="verify_email_now">' . translate('verify_email_now') . '</a>';
+                echo '</div>';
+                echo '</div>';
+            }
+        }
+    }
+    ?>
