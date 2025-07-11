@@ -93,7 +93,7 @@ try {
                 }
             }
             
-            echo "<p><a href='database/email_verification_setup.php'>🔧 Database Setup</a></p>";
+            echo "<p><a href='../setup.php'>🔧 Database Setup</a></p>";
             echo "<p><a href='teacher/dashboard.php'>🏠 Teacher Dashboard</a></p>";
             echo "</body></html>";
         }

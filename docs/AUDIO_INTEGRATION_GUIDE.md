@@ -8,7 +8,14 @@
 
 ### 1. Миграция базы данных
 
-Откройте в браузере: `http://ваш-сайт/database/add_audio_support.php`
+Для новых установок используйте обновленный файл: `database/setup.sql`
+
+Для существующих установок выполните миграцию через админ-панель или напрямую в БД:
+
+```sql
+ALTER TABLE vocabulary ADD COLUMN audio_path VARCHAR(500) NULL AFTER image_path;
+CREATE INDEX idx_vocabulary_audio_path ON vocabulary(audio_path);
+```
 
 - Нажмите кнопку "Запустить миграцию"
 - Дождитесь подтверждения успешного обновления
@@ -100,9 +107,7 @@ uploads/
 
 ### База данных:
 
-- `database/add_audio_support.php` - скрипт миграции
-- `database/audio_migration.sql` - SQL команды для справки
-- `database/setup.sql` - обновлен для новых установок
+- `database/setup.sql` - полная инициализация БД с поддержкой аудио
 
 ### Обновленные файлы:
 
