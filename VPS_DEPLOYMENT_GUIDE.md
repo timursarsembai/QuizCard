@@ -201,6 +201,73 @@ Options -Indexes
 - Убедитесь что .env файл настроен правильно
 - Проверьте подключение к базе данных
 
+## 🚨 СРОЧНОЕ РЕШЕНИЕ ПРОБЛЕМЫ 403
+
+### Анализ ваших логов:
+
+```
+AH01276: Cannot serve directory /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/:
+No matching DirectoryIndex (index.php,index.html) found
+```
+
+**ПРОБЛЕМА:** DocumentRoot указывает на корень проекта вместо папки `public/`
+
+### Немедленное решение:
+
+#### Вариант 1: Изменить DocumentRoot в FastPanel (РЕКОМЕНДУЕТСЯ)
+
+1. Зайдите в FastPanel → Домены → test.sarsembai.com
+2. Найдите настройку "Корневая папка" или "DocumentRoot"
+3. Измените с `/var/www/sarsembai_co_usr/data/www/sarsembai.com/test/`
+   на `/var/www/sarsembai_co_usr/data/www/sarsembai.com/test/public/`
+4. Сохраните настройки
+
+#### Вариант 2: Временное решение - создать index.php в корне
+
+Если не можете изменить DocumentRoot, создайте файл в корне проекта:
+
+```php
+<?php
+// /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/index.php
+// Временное перенаправление на public/
+header('Location: public/');
+exit;
+```
+
+#### Вариант 3: Через SSH (если есть доступ)
+
+```bash
+# Подключитесь по SSH и выполните:
+cd /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
+
+# Проверьте структуру
+ls -la
+ls -la public/
+
+# Создайте временный index.php если нужно
+echo '<?php header("Location: public/"); exit; ?>' > index.php
+```
+
+### После исправления DocumentRoot проверьте:
+
+```bash
+# Права доступа к public/
+chmod 755 public/
+chmod 644 public/index.php
+
+# Убедитесь что .htaccess существует в public/
+ls -la public/.htaccess
+
+# Если нет - создайте минимальный:
+cat > public/.htaccess << 'EOF'
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+Options -Indexes
+EOF
+```
+
 ## Контрольный список для deployment
 
 - [ ] Права доступа к файлам настроены
