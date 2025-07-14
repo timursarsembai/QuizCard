@@ -154,11 +154,11 @@ Options -Indexes
 </IfModule>
 
 # Пользовательские страницы ошибок
-ErrorDocument 400 /quizcard/error.php
-ErrorDocument 401 /quizcard/error.php
-ErrorDocument 403 /quizcard/error.php
-ErrorDocument 404 /quizcard/error.php
-ErrorDocument 500 /quizcard/error.php
+ErrorDocument 400 /error
+ErrorDocument 401 /error
+ErrorDocument 403 /error
+ErrorDocument 404 /error
+ErrorDocument 500 /error
 
 # Редирект для old URLs (если нужно)
 # Redirect 301 /old-page.html /new-page.php

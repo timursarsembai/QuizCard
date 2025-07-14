@@ -1,0 +1,458 @@
+/* QuizCard - Стили для безопасности и форм */
+
+/* Формы безопасности */
+.security-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.login-form {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    overflow: hidden;
+    max-width: 400px;
+    width: 100%;
+}
+
+.login-header {
+    background: linear-gradient(135deg, var(--primary-color), #0056b3);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.login-body {
+    padding: 2rem;
+}
+
+.login-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.login-subtitle {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 0.875rem;
+}
+
+/* Поля с ошибками */
+.form-control.error {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.field-error {
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.form-group.has-error .form-control {
+    border-color: var(--danger-color);
+}
+
+.form-group.has-success .form-control {
+    border-color: var(--success-color);
+}
+
+/* Индикаторы безопасности */
+.security-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.security-indicator.secure {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.security-indicator.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.security-indicator.danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Уведомления безопасности */
+.security-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.security-warning i {
+    color: var(--warning-color);
+    font-size: 1.25rem;
+}
+
+.security-alert {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.security-alert i {
+    color: var(--danger-color);
+    font-size: 1.25rem;
+}
+
+.security-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.security-success i {
+    color: var(--success-color);
+    font-size: 1.25rem;
+}
+
+/* Сила пароля */
+.password-strength {
+    margin-top: 0.5rem;
+}
+
+.password-strength-bar {
+    height: 0.25rem;
+    background-color: #e9ecef;
+    border-radius: 0.125rem;
+    overflow: hidden;
+}
+
+.password-strength-fill {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.password-strength.weak .password-strength-fill {
+    width: 25%;
+    background-color: var(--danger-color);
+}
+
+.password-strength.fair .password-strength-fill {
+    width: 50%;
+    background-color: var(--warning-color);
+}
+
+.password-strength.good .password-strength-fill {
+    width: 75%;
+    background-color: var(--info-color);
+}
+
+.password-strength.strong .password-strength-fill {
+    width: 100%;
+    background-color: var(--success-color);
+}
+
+.password-strength-text {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.password-strength.weak .password-strength-text {
+    color: var(--danger-color);
+}
+
+.password-strength.fair .password-strength-text {
+    color: var(--warning-color);
+}
+
+.password-strength.good .password-strength-text {
+    color: var(--info-color);
+}
+
+.password-strength.strong .password-strength-text {
+    color: var(--success-color);
+}
+
+/* CSRF индикация */
+.csrf-protected {
+    position: relative;
+}
+
+.csrf-protected::after {
+    content: "🔒";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.75rem;
+    opacity: 0.5;
+}
+
+/* Двухфакторная аутентификация */
+.two-factor-code {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.two-factor-code input {
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: bold;
+    border: 2px solid #ced4da;
+    border-radius: var(--border-radius);
+}
+
+.two-factor-code input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Защищенные данные */
+.protected-data {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    position: relative;
+}
+
+.protected-data::before {
+    content: "🔐";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.6;
+}
+
+/* Уровни доступа */
+.access-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.access-level.admin {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.access-level.teacher {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.access-level.student {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.access-level.guest {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+/* Логи безопасности */
+.security-logs {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+}
+
+.security-log-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.security-log-item:last-child {
+    border-bottom: none;
+}
+
+.security-log-item.danger {
+    background-color: #fff5f5;
+    border-left: 4px solid var(--danger-color);
+}
+
+.security-log-item.warning {
+    background-color: #fffbf0;
+    border-left: 4px solid var(--warning-color);
+}
+
+.security-log-item.success {
+    background-color: #f0fff4;
+    border-left: 4px solid var(--success-color);
+}
+
+.security-log-time {
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+}
+
+/* Блокировка аккаунта */
+.account-locked {
+    background-color: #f8d7da;
+    border: 2px solid var(--danger-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    color: #721c24;
+}
+
+.account-locked i {
+    font-size: 3rem;
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+}
+
+.unlock-timer {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--danger-color);
+    margin: 1rem 0;
+}
+
+/* Капча */
+.captcha-container {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.captcha-image {
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+}
+
+.captcha-refresh {
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    margin-left: 0.5rem;
+}
+
+.captcha-refresh:hover {
+    text-decoration: underline;
+}
+
+/* Сессия */
+.session-info {
+    background-color: #e7f3ff;
+    border: 1px solid #b8daff;
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: #004085;
+}
+
+.session-timer {
+    font-weight: bold;
+    color: var(--warning-color);
+}
+
+.session-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+/* Адаптивность для форм безопасности */
+@media (max-width: 767.98px) {
+    .security-form,
+    .login-card {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+    
+    .login-form {
+        padding: 1rem;
+    }
+    
+    .login-header,
+    .login-body {
+        padding: 1.5rem;
+    }
+    
+    .two-factor-code {
+        gap: 0.25rem;
+    }
+    
+    .two-factor-code input {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+    
+    .security-log-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+}
+
+/* Анимации */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
