@@ -1,0 +1,45 @@
+# Базовый .htaccess для public директории
+RewriteEngine On
+
+# Основной роутинг - все запросы направляем на index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Отключить listing директорий
+Options -Indexes
+
+# Базовая защита от выполнения PHP в uploads
+<Files "*.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# Разрешить PHP только для index.php
+<Files "index.php">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Allow from all
+    </IfModule>
+</Files>
+
+# Защита загруженных файлов
+<Directory "uploads">
+    <Files "*.php">
+        <IfModule mod_authz_core.c>
+            Require all denied
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+            Order Allow,Deny
+            Deny from all
+        </IfModule>
+    </Files>
+</Directory>
