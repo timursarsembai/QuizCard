@@ -53,3 +53,67 @@ EOF
 ## После исправления сайт должен работать!
 
 Проверьте: http://test.sarsembai.com/
+
+---
+
+# 🎉 ПРОГРЕСС! 403 → 500 (это хорошо!)
+
+Ошибка 403 исправлена! Теперь Apache находит и запускает PHP файлы.
+
+### Новая проблема из логов:
+
+```
+PHP Fatal error: Class 'App\Config\Database' not found in Router.php:10
+```
+
+**Причина:** Composer autoloader не установлен или не работает.
+
+## 🚀 РЕШЕНИЕ ОШИБКИ 500:
+
+### 1. Установите зависимости Composer по SSH:
+
+```bash
+cd /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
+
+# Проверьте наличие composer.json
+ls -la composer.json
+
+# Установите зависимости
+composer install --no-dev --optimize-autoloader
+
+# Проверьте что создался vendor/autoload.php
+ls -la vendor/autoload.php
+```
+
+### 2. Если composer не найден глобально:
+
+```bash
+# Скачайте composer локально
+curl -sS https://getcomposer.org/installer | php
+php composer.phar install --no-dev --optimize-autoloader
+```
+
+### 3. Проверьте файл .env:
+
+```bash
+# Убедитесь что .env существует
+ls -la .env
+
+# Если нет, скопируйте из примера
+cp .env.example .env
+```
+
+### 4. Настройте .env для вашей БД:
+
+```bash
+nano .env
+```
+
+Убедитесь что указаны правильные данные БД:
+
+```env
+DB_HOST=localhost
+DB_NAME=your_database_name
+DB_USER=your_db_user
+DB_PASS=your_db_password
+```
