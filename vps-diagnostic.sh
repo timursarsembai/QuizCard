@@ -15,11 +15,41 @@ echo "2. Содержимое public/:"
 ls -la public/
 echo
 
-# Проверка прав доступа
-echo "3. Права доступа к ключевым файлам:"
-ls -la public/index.php 2>/dev/null || echo "public/index.php не найден!"
-ls -la public/.htaccess 2>/dev/null || echo "public/.htaccess не найден!"
-ls -la .env 2>/dev/null || echo ".env не найден!"
+# Проверка app/Config/Database.php
+echo "3. Проверка файла Database.php:"
+if [ -f "app/Config/Database.php" ]; then
+    echo "✅ app/Config/Database.php найден"
+    echo "Первые 5 строк:"
+    head -5 app/Config/Database.php
+else
+    echo "❌ app/Config/Database.php НЕ НАЙДЕН!"
+fi
+echo
+
+# Проверка composer.json
+echo "4. Проверка composer.json:"
+if [ -f "composer.json" ]; then
+    echo "✅ composer.json найден"
+    cat composer.json
+else
+    echo "❌ composer.json НЕ НАЙДЕН!"
+    echo "Создание composer.json..."
+    cat > composer.json << 'EOF'
+{
+    "name": "quizcard/app",
+    "type": "project",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
+EOF
+    echo "✅ composer.json создан"
+fi
 echo
 
 # Проверка PHP

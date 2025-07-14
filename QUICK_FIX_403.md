@@ -154,3 +154,46 @@ composer install --no-dev --optimize-autoloader
 cd /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
 COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 ```
+
+---
+
+## 🎉 ПРОГРЕСС! Composer установлен, но нужно исправить PSR-4
+
+### Проблема из вывода Composer:
+
+```
+Class App\Config\Database located in ./app/Config/database.php does not comply with psr-4 autoloading standard
+```
+
+**Причина:** Файлы названы в нижнем регистре (database.php), а должны быть Database.php
+
+### ⚡ БЫСТРОЕ ИСПРАВЛЕНИЕ:
+
+Выполните в SSH:
+
+```bash
+cd /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
+
+# Переименование файлов для PSR-4 соответствия
+mv app/Config/database.php app/Config/Database.php
+mv app/Config/audio_config.php app/Config/AudioConfig.php
+mv app/Config/email_config.php app/Config/EmailConfig.php
+mv app/Config/upload_config.php app/Config/UploadConfig.php
+
+# Пересборка autoloader
+COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize
+```
+
+### 🔧 ИЛИ используйте готовый скрипт:
+
+```bash
+wget https://raw.githubusercontent.com/timursarsembai/QuizCard/v.3/fix-psr4-naming.sh
+chmod +x fix-psr4-naming.sh
+./fix-psr4-naming.sh
+```
+
+### ✅ После исправления:
+
+- Файлы будут правильно названы (Database.php, AudioConfig.php, etc.)
+- Autoloader заработает корректно
+- Ошибка `Class 'App\Config\Database' not found` исчезнет
