@@ -1,0 +1,39 @@
+# Защита аудиофайлов
+# Разрешаем только чтение аудиофайлов
+
+<Files "*.mp3">
+    ForceType audio/mpeg
+</Files>
+
+<Files "*.wav">
+    ForceType audio/wav
+</Files>
+
+<Files "*.ogg">
+    ForceType audio/ogg
+</Files>
+
+# Запрещаем выполнение PHP и других скриптов
+<Files "*.php">
+    Deny from all
+</Files>
+
+<Files "*.phtml">
+    Deny from all
+</Files>
+
+<Files "*.html">
+    Deny from all
+</Files>
+
+<Files "*.htm">
+    Deny from all
+</Files>
+
+# Запрещаем доступ к скрытым файлам
+<Files ".*">
+    Deny from all
+</Files>
+
+# Отключаем индексацию директории
+Options -Indexes
