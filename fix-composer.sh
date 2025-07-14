@@ -60,7 +60,14 @@ echo
 
 # Установка зависимостей
 echo "4. Установка зависимостей:"
-$COMPOSER_CMD install --no-dev --optimize-autoloader
+echo "Проверка прав пользователя..."
+if [ "$EUID" -eq 0 ]; then
+    echo "⚠️  Запуск от root пользователя обнаружен"
+    echo "Используем COMPOSER_ALLOW_SUPERUSER=1..."
+    COMPOSER_ALLOW_SUPERUSER=1 $COMPOSER_CMD install --no-dev --optimize-autoloader
+else
+    $COMPOSER_CMD install --no-dev --optimize-autoloader
+fi
 echo
 
 # Проверка autoloader

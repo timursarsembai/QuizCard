@@ -117,3 +117,40 @@ DB_NAME=your_database_name
 DB_USER=your_db_user
 DB_PASS=your_db_password
 ```
+
+### 🔧 РЕШЕНИЕ для Root пользователя:
+
+Composer показывает предупреждение о запуске от root. Есть несколько вариантов:
+
+#### Вариант 1: Принудительно продолжить (БЫСТРЫЙ):
+
+```bash
+# Просто нажмите 'yes' когда спросит:
+composer install --no-dev --optimize-autoloader
+# При вопросе "Continue as root/super user [yes]?" введите: yes
+```
+
+#### Вариант 2: Игнорировать предупреждение (РЕКОМЕНДУЕМЫЙ):
+
+```bash
+# Добавьте флаг для игнорирования предупреждения root
+COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
+```
+
+#### Вариант 3: Создать пользователя (для production):
+
+```bash
+# Создайте пользователя для сайта
+adduser quizcard
+chown -R quizcard:quizcard /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
+su - quizcard
+cd /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
+composer install --no-dev --optimize-autoloader
+```
+
+### ⚡ САМЫЙ БЫСТРЫЙ СПОСОБ:
+
+```bash
+cd /var/www/sarsembai_co_usr/data/www/sarsembai.com/test/
+COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
+```
